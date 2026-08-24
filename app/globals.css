@@ -5,6 +5,12 @@
   --font-script: var(--font-script), cursive;
 }
 
+html,
+body {
+  overscroll-behavior-y: none; /* matikan pull-to-refresh & rubber-band bounce */
+  height: 100%;
+}
+
 @layer utilities {
   .mobile-canvas {
     width: 100%;
@@ -15,6 +21,7 @@
     background-color: #f5f6f1;
     box-shadow: 0 0 40px rgba(0, 0, 0, 0.4);
     overflow: hidden;
+    overscroll-behavior: none; /* jaga-jaga kalau ada nested scroll container */
   }
 }
 
