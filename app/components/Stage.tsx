@@ -91,7 +91,7 @@ export default function Stage() {
       </div>
 
       {/* LAYER 8: Swipe Up Indicator -- juga di luar scene */}
-      <div className="absolute bottom-[2.4cqw] inset-x-0 z-50 flex flex-col items-center justify-center text-[#2a2a2a] animate-bounce pointer-events-none">
+      <div className="absolute bottom-[2.4cqw] inset-x-0 z-50 flex flex-col items-center justify-center text-white animate-bounce pointer-events-none">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           width="20"
