@@ -2,68 +2,85 @@
 
 import Image from "next/image";
 
+const GIFT_URL = "#"; // GANTI ke link rekening/e-wallet/wishlist kado
+const COUPLE_NAMES = "Vincent & Natasha";
+
 export default function Closing() {
   return (
-    <section className="relative flex w-full min-h-[100dvh] flex-col items-center justify-center px-[6cqw] py-[15%] [container-type:inline-size]">
-      {/* Top: Wedding Gift Box */}
-      <div className="flex w-full max-w-[420px] items-center gap-[5%] mb-[15%]">
-        {/* Bunga Kiri */}
-        <div className="relative w-[35%] aspect-[3/4]">
+    <section
+      aria-label="Wedding gift and closing message"
+      className="relative flex w-full min-h-[100dvh] flex-col items-center justify-center px-[6cqw] py-[15%] [container-type:inline-size]"
+    >
+      <div className="mb-[15%] flex w-full max-w-[420px] items-center gap-[5%]">
+        <div
+          aria-hidden="true"
+          className="relative aspect-[3/4] w-[35%] select-none"
+        >
           <Image
-            src="/images/sunny_decor3.webp" // Ganti dengan asset bunga kuning
-            alt="Flower Bouquet"
+            src="/images/sunny_decor3.webp"
+            alt=""
             fill
+            sizes="150px"
             className="object-contain"
           />
         </div>
 
-        {/* Teks & Button Kanan */}
         <div className="flex w-[60%] flex-col items-start text-left">
-          <h2 className="font-script text-[9cqw] md:text-4xl text-[#2a2a2a] mb-[2%]">
+          <h2 className="mb-[2%] font-script text-[9cqw] text-[#2a2a2a] md:text-4xl">
             Wedding Gift
           </h2>
-          <p className="text-[3cqw] md:text-[11px] leading-relaxed text-[#3a3a3a] mb-[6%]">
-            We're so grateful for your love and support, any gift you share
+          <p className="mb-[6%] text-[3cqw] leading-relaxed text-[#3a3a3a] md:text-[11px]">
+            We are so grateful for your love and support, any gift you share
             means the world to us.
           </p>
-          <button className="bg-[#785b4d] hover:bg-[#63493d] transition-colors text-white text-[2.8cqw] md:text-[10px] font-bold tracking-widest uppercase px-[8%] py-[4%] md:px-6 md:py-2.5 rounded-[999px]">
-            Send Gift
-          </button>
+          <a
+            href={GIFT_URL}
+            className="rounded-[999px] bg-[#785b4d] px-[8%] py-[4%]
+            text-[2.8cqw] font-bold uppercase tracking-widest text-white
+            transition-colors hover:bg-[#63493d] focus-visible:outline
+            focus-visible:outline-2 focus-visible:outline-offset-2
+            focus-visible:outline-[#785b4d] active:opacity-90 md:px-6 md:py-2.5
+            md:text-[10px]"
+          >
+            SEND GIFT
+          </a>
         </div>
       </div>
 
-      {/* Middle: Photo Oval + Floating Text */}
-      {/* Parent container di-set overflow-visible supaya teks bisa tembus keluar */}
-      <div className="relative w-[70cqw] max-w-[340px] aspect-[1/1.4] mb-[12%]">
-        {/* Inner container untuk border & crop foto (overflow-hidden) */}
-        <div className="absolute inset-0 overflow-hidden rounded-[999px] border-[2px] md:border-[3px] border-white shadow-md">
+      <div className="relative mb-[12%] aspect-[1/1.4] w-[70cqw] max-w-[340px]">
+        <div className="absolute inset-0 overflow-hidden rounded-[999px] border-[2px] border-white shadow-md md:border-[3px]">
           <Image
-            src="/images/cover-bg.jpg" // Ganti dengan foto couple
-            alt="Vincent & Natasha"
+            src="/images/cover-bg.jpg"
+            alt={COUPLE_NAMES + " wedding photo"}
             fill
+            sizes="(max-width: 340px) 70cqw, 340px"
             className="object-cover"
           />
         </div>
 
-        {/* Floating Names (Absolute position di pojok kanan bawah cermin) */}
-        <div className="absolute -bottom-[10%] -right-[15%] flex flex-col z-10 rotate-[-5deg] pointer-events-none">
-          <span className="font-script text-[13cqw] md:text-6xl text-[#333] leading-[0.7]">
-            Vincent &
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute -bottom-[10%] -right-[15%] z-10 flex -rotate-[5deg] flex-col select-none"
+        >
+          <span className="font-script text-[13cqw] leading-[0.7] text-[#333] md:text-6xl">
+            Vincent and
           </span>
-          <span className="font-script text-[13cqw] md:text-6xl text-[#333] ml-[20%] mt-[2%]">
+          <span className="ml-[20%] mt-[2%] font-script text-[13cqw] text-[#333] md:text-6xl">
             Natasha
           </span>
         </div>
       </div>
 
-      {/* Bottom: Thank You Message & Swipe Up */}
-      <div className="flex flex-col items-center mt-auto w-full max-w-[480px]">
-        <p className="text-center text-[3.2cqw] md:text-[13px] leading-relaxed text-[#2a2a2a] px-[4%] font-medium">
-          We can't wait to share this special moment with you. Your presence
+      <div className="mt-auto flex w-full max-w-[480px] flex-col items-center">
+        <p className="px-[4%] text-center text-[3.2cqw] font-medium leading-relaxed text-[#2a2a2a] md:text-[13px]">
+          We cannot wait to share this special moment with you. Your presence
           will make our day even more meaningful.
         </p>
 
-        <span className="mt-[8%] text-[2.6cqw] md:text-[11px] font-medium text-[#2a2a2a]/50 animate-bounce">
+        <span
+          aria-hidden="true"
+          className="mt-[8%] animate-bounce text-[2.6cqw] font-medium text-[#2a2a2a]/50 md:text-[11px]"
+        >
           Swipe up
         </span>
       </div>

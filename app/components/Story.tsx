@@ -22,76 +22,87 @@ const CHAPTERS: StoryChapter[] = [
   },
 ];
 
+function ChapterItem({ title, body }: StoryChapter) {
+  return (
+    <div className="mb-[6%] last:mb-0">
+      <h3 className="mb-[2%] text-[4cqw] font-semibold text-white drop-shadow-sm md:text-base">
+        {title}
+      </h3>
+      <p className="mx-auto max-w-[95%] text-[3cqw] leading-relaxed text-white/95 drop-shadow-sm md:text-sm">
+        {body}
+      </p>
+    </div>
+  );
+}
+
 export default function Story() {
   return (
-    // px diturunkan jadi 3% agar mepet, ditambah overflow-x-hidden mencegah horizontal scroll
-    <section className="relative flex w-full min-h-[100dvh] flex-col items-center justify-center px-[3%] py-[30%] overflow-x-hidden [container-type:inline-size]">
-      
-      {/* Container dibuat w-full agar mengisi sisa padding 3% */}
+    <section
+      aria-label="Our love story"
+      className="relative flex w-full min-h-[100dvh] flex-col items-center justify-center overflow-x-hidden px-[3%] py-[30%] [container-type:inline-size]"
+    >
       <div className="relative w-full max-w-[500px]">
-        
         {/* Wreath Atas */}
-        <div className="pointer-events-none absolute -top-[12%] left-1/2 z-20 w-[115%] max-w-[550px] -translate-x-1/2 rotate-180">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute -top-[12%] left-1/2 z-20 w-[115%] max-w-[550px] -translate-x-1/2 rotate-180 select-none"
+        >
           <Image
             src="/images/sunny_decor1.webp"
-            alt="Floral Decor Top"
+            alt=""
             width={800}
             height={340}
-            className="w-full h-auto"
+            className="h-auto w-full"
           />
         </div>
 
         {/* Pill/Oval berisi Foto + Teks */}
-        <div className="relative overflow-hidden rounded-[999px] shadow-lg w-full">
+        <div className="relative w-full overflow-hidden rounded-[999px] shadow-lg">
           <div className="absolute inset-0 -z-10">
             <Image
               src="/images/cover-bg.jpg"
-              alt="Couple Story Background"
+              alt="Couple photo background"
               fill
+              sizes="(max-width: 500px) 100vw, 500px"
               className="object-cover"
             />
-            <div className="absolute inset-0 bg-black/40" />
+            <div className="absolute inset-0 bg-black/40" aria-hidden="true" />
           </div>
 
-          {/* Konten Teks - padding atas-bawah disesuaikan agar proporsional */}
           <div className="relative z-10 flex flex-col items-center px-[10%] py-[25%] text-center">
-            <p className="font-script text-[10cqw] md:text-5xl text-white drop-shadow-md mb-[8%]">
+            <p className="mb-[8%] font-script text-[10cqw] text-white drop-shadow-md md:text-5xl">
               Our Love Story
             </p>
 
             <div className="flex flex-col gap-[7%]">
               {CHAPTERS.map((chapter) => (
-                <div key={chapter.title} className="mb-[6%] last:mb-0">
-                  <h3 className="text-[4cqw] md:text-base font-semibold text-white drop-shadow-sm mb-[2%]">
-                    {chapter.title}
-                  </h3>
-                  <p className="text-[3cqw] md:text-sm leading-relaxed text-white/95 drop-shadow-sm mx-auto max-w-[95%]">
-                    {chapter.body}
-                  </p>
-                </div>
+                <ChapterItem key={chapter.title} {...chapter} />
               ))}
             </div>
           </div>
         </div>
 
         {/* Wreath Bawah */}
-        <div className="pointer-events-none absolute -bottom-[12%] left-1/2 z-20 w-[115%] max-w-[550px] -translate-x-1/2">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute -bottom-[12%] left-1/2 z-20 w-[115%] max-w-[550px] -translate-x-1/2 select-none"
+        >
           <Image
             src="/images/sunny_decor1.webp"
-            alt="Floral Decor Bottom"
+            alt=""
             width={800}
             height={340}
-            className="w-full h-auto rotate-[360deg]"
+            className="h-auto w-full"
           />
         </div>
       </div>
 
-      {/* Swipe up text */}
-      <div className="mt-[10%]">
-        <span className="text-[3cqw] md:text-xs font-medium text-[#2a2a2a]/60 animate-bounce block">
-          Swipe up
-        </span>
-      </div>
+      <span
+        aria-hidden="true"
+        className="mt-[10%] block animate-bounce text-[3cqw] font-medium text-[#2a2a2a]/60 md:text-xs"
+      >
+        Swipe up
+      </span>
     </section>
   );
 }

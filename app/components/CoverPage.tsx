@@ -5,44 +5,55 @@ interface Props {
   hasOpened?: boolean;
 }
 
+const COUPLE_NAMES = "Vincent & Natasha";
+const WEDDING_DATE = "Saturday, April 25, 2026";
+const GUEST_NAME = "Guest"; // GANTI: idealnya diambil dari query param/props untuk personalisasi
+
 export default function CoverPage({ onOpen, hasOpened }: Props) {
   return (
     <section className="relative w-full h-dvh overflow-hidden">
       <div className="absolute inset-0 z-0">
         <Image
           src="/images/cover-bg.jpg"
-          alt="Vincent & Natasha"
+          alt={COUPLE_NAMES}
           fill
-          className="object-cover object-top"
           priority
+          sizes="100vw"
+          className="object-cover object-top"
         />
       </div>
 
-      <div className="absolute inset-x-0 bottom-0 z-5 h-[65%] bg-linear-to-t from-[#f5f6f1] via-[#f5f6f1]/80 to-transparent pointer-events-none" />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 bottom-0 z-5 h-[65%] bg-linear-to-t from-[#f5f6f1] via-[#f5f6f1]/80 to-transparent"
+      />
 
-      <div className="absolute bottom-10 inset-x-0 z-10 flex flex-col items-center text-center px-4 w-full">
-        <p className="text-[12px] text-[#333333] mb-0 font-normal">
+      <div className="absolute inset-x-0 bottom-10 z-10 flex w-full flex-col items-center px-4 text-center">
+        <p className="mb-0 text-[12px] font-normal text-[#333333]">
           The Wedding of
         </p>
-        <h1 className="font-script text-[2.25rem] md:text-[2.5rem] leading-[1.2] text-[#333333] my-1 whitespace-nowrap">
-          Vincent & Natasha
+        <h1 className="my-1 whitespace-nowrap font-script text-[2.25rem] leading-[1.2] text-[#333333] md:text-[2.5rem]">
+          {COUPLE_NAMES}
         </h1>
-        <p className="text-[12px] text-[#333333] font-normal">
-          Saturday, April 25, 2026
-        </p>
-        <div className="h-6"></div>
+        <p className="text-[12px] font-normal text-[#333333]">{WEDDING_DATE}</p>
+
+        <div className="h-6" />
+
         <div className="flex flex-col items-center gap-0.5">
-          <p className="text-[12px] text-[#333333] font-normal">Dear,</p>
-          <p className="text-[15px] font-bold text-[#333333]">Guest</p>
+          <p className="text-[12px] font-normal text-[#333333]">Dear,</p>
+          <p className="text-[15px] font-bold text-[#333333]">{GUEST_NAME}</p>
         </div>
-        <div className="h-5"></div>
+
+        <div className="h-5" />
 
         {!hasOpened ? (
           <button
+            type="button"
             onClick={onOpen}
-            className="pointer-events-auto flex items-center justify-center gap-2.5 bg-[#786455] hover:bg-[#635246] transition-colors text-white text-[11px] font-semibold px-8 py-3.5 rounded-md uppercase tracking-[0.15em] shadow-sm"
+            className="pointer-events-auto flex items-center justify-center gap-2.5 rounded-md bg-[#786455] px-8 py-3.5 text-[11px] font-semibold uppercase tracking-[0.15em] text-white shadow-sm transition-colors hover:bg-[#635246] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#786455] active:opacity-90"
           >
             <svg
+              aria-hidden="true"
               xmlns="http://www.w3.org/2000/svg"
               width="14"
               height="14"
@@ -59,8 +70,9 @@ export default function CoverPage({ onOpen, hasOpened }: Props) {
             Open Invitation
           </button>
         ) : (
-          <div className="flex flex-col items-center text-[#333333] animate-bounce">
+          <div className="flex animate-bounce flex-col items-center text-[#333333]">
             <svg
+              aria-hidden="true"
               xmlns="http://www.w3.org/2000/svg"
               width="20"
               height="20"
@@ -74,7 +86,7 @@ export default function CoverPage({ onOpen, hasOpened }: Props) {
             >
               <path d="m6 9 6 6 6-6" />
             </svg>
-            <span className="text-[11px] font-semibold mt-1 tracking-[0.1em] uppercase drop-shadow-sm">
+            <span className="mt-1 text-[11px] font-semibold uppercase tracking-[0.1em] drop-shadow-sm">
               Scroll Down
             </span>
           </div>
