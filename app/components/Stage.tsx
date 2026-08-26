@@ -1,13 +1,15 @@
 import Image from "next/image";
 
-export default function Stage() {
+interface StageProps {
+  /** 0 = normal (section Stage), 1 = full masuk Countdown */
+  revealProgress?: number;
+}
+
+export default function Stage({ revealProgress = 0 }: StageProps) {
+  const quoteOpacity = 1 - revealProgress;
+
   return (
     <section className="relative w-full h-[100dvh] overflow-hidden bg-[#7bbff1] [container-type:inline-size]">
-      {/* SCENE WRAPPER: hanya bungkus langit/pohon/couple/bunga.
-          aspect-[3/4] + min-w-full min-h-full = teknik "cover" (grow lalu
-          di-crop simetris), supaya zoom/framing foto konsisten di semua
-          device. Quote & swipe SENGAJA tidak dimasukkan ke sini supaya
-          tidak ikut ke-crop/zoom. */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-auto h-auto min-w-full min-h-full aspect-[3/4] bg-[#7bbff1] overflow-hidden">
         {/* LAYER 1: Background Langit */}
         <div className="absolute inset-0 z-0">
@@ -63,12 +65,22 @@ export default function Stage() {
             className="w-full h-auto scale-[1.3] origin-bottom translate-x-[3%] translate-y-[2%]"
           />
         </div>
+
+        {/* Dim overlay: pudarkan Stage sebanding revealProgress,
+            supaya teks Countdown tetap legible di atasnya. Linear
+            mengikuti scroll asli (bukan CSS transition timed). */}
+        <div
+          className="absolute inset-0 z-[45] bg-white pointer-events-none"
+          style={{ opacity: revealProgress * 0.75 }}
+        />
       </div>
 
-      {/* LAYER 6 & 7: QUOTE SECTION (Cloud + Text) -- DI LUAR scene,
-          cqw dihitung dari section (frame asli/viewport), jadi selalu
-          utuh tidak kepotong meskipun scene di dalam sedang di-zoom. */}
-      <div className="absolute top-[8%] inset-x-0 z-50 flex items-center justify-center pointer-events-none">
+      {/* LAYER 6 & 7: QUOTE SECTION -- fade out begitu masuk Countdown,
+          karena posisinya bentrok persis dengan konten Countdown. */}
+      <div
+        className="absolute top-[8%] inset-x-0 z-50 flex items-center justify-center pointer-events-none"
+        style={{ opacity: quoteOpacity }}
+      >
         <div className="absolute w-[130%] max-w-[1000px] h-[900px] translate-y-[2%] opacity-90">
           <Image
             src="/images/cloud3_80_min.png"
@@ -90,8 +102,12 @@ export default function Stage() {
         </div>
       </div>
 
-      {/* LAYER 8: Swipe Up Indicator -- juga di luar scene */}
-      <div className="absolute bottom-[2.4cqw] inset-x-0 z-50 flex flex-col items-center justify-center text-white animate-bounce pointer-events-none">
+      {/* LAYER 8: Swipe Up Indicator -- fade out juga, supaya tidak
+          numpuk dengan swipe-up indicator milik Countdown. */}
+      <div
+        className="absolute bottom-[2.4cqw] inset-x-0 z-50 flex flex-col items-center justify-center text-white animate-bounce pointer-events-none"
+        style={{ opacity: quoteOpacity }}
+      >
         <svg
           xmlns="http://www.w3.org/2000/svg"
           width="20"

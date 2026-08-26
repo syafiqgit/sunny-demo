@@ -3,11 +3,14 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import CoverPage from "./components/CoverPage";
 import Stage from "./components/Stage";
+import MainSection from "./components/MainSection";
+
+const SECTION_COUNT = 3; // 0 = cover, 1 = stage, 2 = story+countdown+rsvp
 
 export default function Home() {
   const [isLoading, setIsLoading] = useState(true);
-  const [activeSection, setActiveSection] = useState<0 | 1>(0); // 0 = cover, 1 = stage
-  const [hasOpened, setHasOpened] = useState(false); // permanen, buat ganti tombol->indikator
+  const [scrollProgress, setScrollProgress] = useState(0);
+  const [hasOpened, setHasOpened] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const rafRef = useRef<number | null>(null);
 
@@ -17,21 +20,26 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    if (activeSection === 1 && !hasOpened) setHasOpened(true);
-  }, [activeSection, hasOpened]);
+    if (scrollProgress >= 0.5 && !hasOpened) setHasOpened(true);
+  }, [scrollProgress, hasOpened]);
 
   const handleScroll = useCallback(() => {
     if (rafRef.current) cancelAnimationFrame(rafRef.current);
     rafRef.current = requestAnimationFrame(() => {
       const el = containerRef.current;
       if (!el) return;
-      // snap ke section terdekat (0 atau 1), BUKAN nilai kontinu -- ini yang
-      // bikin fade-nya jadi animasi timed yang slow & konsisten, tidak
-      // ngikutin kecepatan scroll jari/mouse secara langsung.
-      const p = el.scrollTop / el.clientHeight;
-      setActiveSection(p >= 0.5 ? 1 : 0);
+      const raw = el.scrollTop / el.clientHeight;
+      const clamped = Math.min(Math.max(raw, 0), SECTION_COUNT - 1);
+      setScrollProgress(clamped);
     });
   }, []);
+
+  useEffect(
+    () => () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    },
+    [],
+  );
 
   const handleOpen = () => {
     containerRef.current?.scrollTo({
@@ -40,9 +48,11 @@ export default function Home() {
     });
   };
 
+  const coverToStage = Math.min(Math.max(scrollProgress, 0), 1);
+  const stageToCombined = Math.min(Math.max(scrollProgress - 1, 0), 1);
+
   return (
     <main className="mobile-canvas relative">
-      {/* Loading overlay -- tetap sama */}
       <div
         className={`absolute inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-md transition-opacity duration-1000 ease-in-out ${
           isLoading ? "opacity-100" : "opacity-0 pointer-events-none"
@@ -54,7 +64,6 @@ export default function Home() {
       </div>
 
       <div className="relative w-full h-[100dvh] overflow-hidden">
-        {/* TRACK: tetap sama, nangkep gesture scroll */}
         <div
           ref={containerRef}
           onScroll={handleScroll}
@@ -62,26 +71,41 @@ export default function Home() {
         >
           <div className="h-[100dvh] snap-start snap-always" />
           <div className="h-[100dvh] snap-start snap-always" />
+          <div className="h-[100dvh] snap-start snap-always" />
         </div>
 
-        {/* VISUAL: durasi dinaikkan ke 1000ms (slow, "menghilang-muncul"),
-            ease-in-out biar mulus di awal & akhir transisi, bukan linear. */}
+        {/* FIX: pointer-events-none di sini. Ini root cause-nya —
+            tanpa ini, wrapper full-screen ini "menutup" track scroll
+            di bawahnya walau semua child-nya sudah none. */}
         <div className="absolute inset-0 z-10 pointer-events-none">
           <div
-            className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
-              activeSection === 0 ? "opacity-100" : "opacity-0"
-            }`}
+            className="absolute inset-0 transition-opacity duration-1000 ease-in-out pointer-events-none"
+            style={{
+              opacity: coverToStage < 0.5 ? 1 : 0,
+            }}
           >
             {!isLoading && (
               <CoverPage onOpen={handleOpen} hasOpened={hasOpened} />
             )}
           </div>
+
           <div
-            className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
-              activeSection === 1 ? "opacity-100" : "opacity-0"
-            }`}
+            className="absolute inset-0 transition-opacity duration-1000 ease-in-out"
+            style={{
+              opacity: coverToStage >= 0.5 ? 1 : 0,
+              pointerEvents: "none",
+            }}
           >
-            {!isLoading && <Stage />}
+            {!isLoading && <Stage revealProgress={stageToCombined} />}
+          </div>
+
+          <div
+            className="absolute inset-0 will-change-transform pointer-events-none"
+            style={{
+              transform: `translateY(${(1 - stageToCombined) * 100}%)`,
+            }}
+          >
+            {!isLoading && <MainSection />}
           </div>
         </div>
       </div>
