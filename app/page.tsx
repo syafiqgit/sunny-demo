@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import CoverPage from "./components/CoverPage";
-import Stage from "./components/Stage";
+import Stage from "@/app/components/Stage";
 import MainSection from "./components/MainSection";
 
 const SECTION_COUNT = 8;
@@ -20,6 +20,8 @@ export default function Home() {
 
   const containerRef = useRef<HTMLDivElement>(null);
   const rafRef = useRef<number | null>(null);
+  const openFrameRef = useRef<number | null>(null);
+  const lastProgressRef = useRef(0);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -49,7 +51,10 @@ export default function Home() {
       const rawProgress = el.scrollTop / el.clientHeight;
       const clampedProgress = clamp(rawProgress, 0, SECTION_COUNT - 1);
 
-      setScrollProgress(clampedProgress);
+      if (clampedProgress !== lastProgressRef.current) {
+        lastProgressRef.current = clampedProgress;
+        setScrollProgress(clampedProgress);
+      }
     });
   }, []);
 
@@ -57,6 +62,9 @@ export default function Home() {
     return () => {
       if (rafRef.current !== null) {
         cancelAnimationFrame(rafRef.current);
+      }
+      if (openFrameRef.current !== null) {
+        cancelAnimationFrame(openFrameRef.current);
       }
     };
   }, []);
@@ -75,9 +83,15 @@ export default function Home() {
 
   const handleOpen = useCallback(() => {
     setHasOpened(true);
-    setTimeout(() => {
+
+    if (openFrameRef.current !== null) {
+      cancelAnimationFrame(openFrameRef.current);
+    }
+
+    openFrameRef.current = requestAnimationFrame(() => {
       scrollToSection(1);
-    }, 50);
+      openFrameRef.current = null;
+    });
   }, [scrollToSection]);
 
   const handleBackToStage = useCallback(() => {
@@ -85,7 +99,6 @@ export default function Home() {
   }, [scrollToSection]);
 
   const coverToStage = clamp(scrollProgress, 0, 1);
-  // Diizinkan hingga 1.2 agar Stage dapat mendeteksi transisi saat scroll masuk ke MainSection
   const stageRevealProgress = clamp((scrollProgress - 1) / 5, 0, 1.2);
   const mainSectionProgress = clamp(scrollProgress - 6, 0, 1);
 
@@ -93,11 +106,10 @@ export default function Home() {
   const stageOpacity = clamp(coverToStage * 2, 0, 1);
 
   return (
-    <main className="mobile-canvas relative">
-      {/* Loading Overlay */}
+    <main aria-busy={isLoading} className="mobile-canvas relative">
       <div
         aria-hidden={!isLoading}
-        className={`absolute inset-0 z-[100] flex items-center justify-center bg-black/25 transition-opacity duration-1000 ease-in-out ${
+        className={`absolute inset-0 z-100 flex items-center justify-center bg-black/25 transition-opacity duration-1000 ease-in-out ${
           isLoading ? "opacity-100" : "pointer-events-none opacity-0"
         }`}
       >
@@ -106,36 +118,20 @@ export default function Home() {
         </span>
       </div>
 
-      <div className="relative h-[100dvh] w-full overflow-hidden">
-        {/* Main Scroll Container */}
+      <div className="relative h-dvh w-full overflow-hidden">
         <div
           ref={containerRef}
           onScroll={handleScroll}
-          className={`absolute inset-0 z-0 snap-y snap-mandatory overscroll-y-contain scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${
+          className={`absolute inset-0 z-0 snap-y snap-mandatory overscroll-y-contain scroll-smooth scrollbar-none [&::-webkit-scrollbar]:hidden ${
             !hasOpened ? "overflow-hidden" : "overflow-y-auto"
           }`}
         >
-          {/* Index 0: Cover */}
-          <div className="h-[100dvh] snap-start snap-always" />
-          {/* Index 1: Stage - FASE 1: Quote Awal */}
-          <div className="h-[100dvh] snap-start snap-always" />
-          {/* Index 2: Stage - FASE 2: Informasi Pria */}
-          <div className="h-[100dvh] snap-start snap-always" />
-          {/* Index 3: Stage - FASE 3: Informasi Wanita */}
-          <div className="h-[100dvh] snap-start snap-always" />
-          {/* Index 4: Stage - FASE 4: Informasi Acara */}
-          <div className="h-[100dvh] snap-start snap-always" />
-          {/* Index 5: Stage - FASE 5: Dress Code */}
-          <div className="h-[100dvh] snap-start snap-always" />
-          {/* Index 6: Stage - FASE 6: Zoom Out Full Stage & Closing Quote */}
-          <div className="h-[100dvh] snap-start snap-always" />
-          {/* Index 7: Main Section */}
-          <div className="h-[100dvh] snap-start snap-always" />
+          {Array.from({ length: SECTION_COUNT }, (_, sectionIndex) => (
+            <div key={sectionIndex} className="h-dvh snap-start snap-always" />
+          ))}
         </div>
 
-        {/* Visual Layer */}
         <div className="pointer-events-none absolute inset-0 z-10">
-          {/* COVER PAGE */}
           <div
             className="pointer-events-none absolute inset-0 transition-opacity duration-300 ease-out"
             style={{ opacity: coverOpacity }}
@@ -143,7 +139,6 @@ export default function Home() {
             <CoverPage onOpen={handleOpen} hasOpened={hasOpened} />
           </div>
 
-          {/* STAGE */}
           <div
             className="pointer-events-none absolute inset-0 transition-opacity duration-300 ease-out"
             style={{ opacity: stageOpacity }}
@@ -151,7 +146,6 @@ export default function Home() {
             {!isLoading && <Stage revealProgress={stageRevealProgress} />}
           </div>
 
-          {/* MAIN SECTION */}
           <div
             className="pointer-events-none absolute inset-0 will-change-transform"
             style={{

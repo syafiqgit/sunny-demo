@@ -9,7 +9,7 @@ export default function Closing() {
   return (
     <section
       aria-label="Wedding gift and closing message"
-      className="relative flex w-full min-h-[100dvh] flex-col items-center justify-center px-[6cqw] py-[15%] [container-type:inline-size]"
+      className="relative flex w-full min-h-dvh flex-col items-center justify-center px-[6cqw] py-[15%] @container"
     >
       <div className="mb-[15%] flex w-full max-w-[420px] items-center gap-[5%]">
         <div

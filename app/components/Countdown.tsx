@@ -34,21 +34,14 @@ export default function Countdown() {
     setMounted(true);
     setTime(getTimeLeft(WEDDING_DATE));
 
-    let rafId: number;
-    let lastTick = 0;
-
-    // Pakai requestAnimationFrame + throttle 1s alih-alih setInterval
-    // supaya tidak drift dan otomatis pause saat tab tidak aktif.
-    const tick = (now: number) => {
-      if (now - lastTick >= 1000) {
-        lastTick = now;
-        setTime(getTimeLeft(WEDDING_DATE));
-      }
-      rafId = requestAnimationFrame(tick);
+    let timeoutId: number;
+    const tick = () => {
+      setTime(getTimeLeft(WEDDING_DATE));
+      timeoutId = window.setTimeout(tick, 1000);
     };
-    rafId = requestAnimationFrame(tick);
+    timeoutId = window.setTimeout(tick, 1000);
 
-    return () => cancelAnimationFrame(rafId);
+    return () => window.clearTimeout(timeoutId);
   }, []);
 
   const isOver =
@@ -68,12 +61,12 @@ export default function Countdown() {
   return (
     <section
       aria-label="Wedding countdown and RSVP"
-      className="relative w-full h-[100dvh] overflow-hidden [container-type:inline-size]"
+      className="relative w-full h-dvh overflow-hidden @container"
     >
       {/* Bunga dekoratif */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute left-96 md:top-25 top-52 md:w-[58cqw] md:max-w-[250px] w-[85cqw] max-w-[370px] z-10 -rotate-[22deg] origin-bottom-right select-none"
+        className="pointer-events-none absolute left-96 md:top-25 top-52 md:w-[58cqw] md:max-w-62.5 w-[85cqw] max-w-92.5 z-10 rotate-[-22deg] origin-bottom-right select-none"
       >
         <Image
           src="/images/sunny_decor2.webp" // GANTI ke path asset bunga kamu
@@ -93,17 +86,17 @@ export default function Countdown() {
           aria-live="polite"
           aria-atomic="true"
         >
-          {units.map((u, i) => (
-            <div key={u.label} className="flex items-start">
-              <div className="flex flex-col items-center min-w-[13cqw] md:min-w-[3.5rem]">
+          {units.map((unit, index) => (
+            <div key={unit.label} className="flex items-start">
+              <div className="flex flex-col items-center min-w-[13cqw] md:min-w-14">
                 <span className="text-[9cqw] md:text-4xl font-light text-[#2a2a2a] tabular-nums leading-none">
-                  {String(u.value).padStart(2, "0")}
+                  {String(unit.value).padStart(2, "0")}
                 </span>
                 <span className="mt-[1.5cqw] text-[2.6cqw] md:text-sm tracking-wide uppercase text-[#2a2a2a]/60">
-                  {u.label}
+                  {unit.label}
                 </span>
               </div>
-              {i < units.length - 1 && (
+              {index < units.length - 1 && (
                 <span
                   aria-hidden="true"
                   className="text-[7cqw] md:text-3xl font-light text-[#2a2a2a]/30 mx-[1cqw] leading-none"

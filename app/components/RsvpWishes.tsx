@@ -56,9 +56,17 @@ function formatRelativeTime(timestamp: number): string {
 }
 
 function createId(): string {
-  return typeof crypto !== "undefined" && "randomUUID" in crypto
-    ? crypto.randomUUID()
-    : `local-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
+    return crypto.randomUUID();
+  }
+
+  if (typeof crypto !== "undefined" && "getRandomValues" in crypto) {
+    const values = new Uint32Array(4);
+    crypto.getRandomValues(values);
+    return `local-${Array.from(values, (value) => value.toString(16)).join("")}`;
+  }
+
+  return `local-${Date.now()}`;
 }
 
 function getInitial(name: string): string {
@@ -79,7 +87,9 @@ export default function RsvpWishes() {
   const canSubmit = useMemo(
     () =>
       trimmedName.length > 0 &&
+      trimmedName.length <= NAME_MAX &&
       trimmedMessage.length > 0 &&
+      trimmedMessage.length <= MESSAGE_MAX &&
       attendance !== "" &&
       !submitting,
     [trimmedName, trimmedMessage, attendance, submitting],
@@ -89,7 +99,13 @@ export default function RsvpWishes() {
     async (e: React.FormEvent) => {
       e.preventDefault();
 
-      if (!trimmedName || !trimmedMessage || !attendance) {
+      if (
+        !trimmedName ||
+        trimmedName.length > NAME_MAX ||
+        !trimmedMessage ||
+        trimmedMessage.length > MESSAGE_MAX ||
+        !attendance
+      ) {
         setError("Please fill in your name, message, and attendance.");
         return;
       }
@@ -172,7 +188,10 @@ export default function RsvpWishes() {
             <select
               id="rsvp-attendance"
               value={attendance}
-              onChange={(e) => setAttendance(e.target.value as Attendance)}
+              onChange={(e) => {
+                const value = e.target.value;
+                setAttendance(value === "yes" || value === "no" ? value : "");
+              }}
               disabled={submitting}
               className="w-full appearance-none rounded-lg border border-[#2a2a2a]/20 bg-white px-[4cqw] py-[3cqw] text-[3.4cqw] text-[#2a2a2a] shadow-sm outline-none transition-shadow focus:ring-2 focus:ring-[#7a5c48]/40 disabled:opacity-60 md:px-4 md:py-2.5 md:text-sm"
             >

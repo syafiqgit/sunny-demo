@@ -45,7 +45,7 @@ function GalleryImage({
   return (
     <div
       className={`relative w-full ${
-        aspect === "landscape" ? "aspect-[3/2]" : "aspect-[3/4]"
+        aspect === "landscape" ? "aspect-3/2" : "aspect-3/4"
       }`}
     >
       <Image
@@ -53,6 +53,7 @@ function GalleryImage({
         alt={alt}
         fill
         priority={priority}
+        loading={priority ? "eager" : "lazy"}
         sizes="(max-width: 500px) 45vw, 250px"
         className="object-cover"
       />
@@ -66,16 +67,16 @@ export default function Gallery() {
   return (
     <section
       aria-label="Our moments gallery"
-      className="relative flex w-full flex-col items-center justify-center py-[15%] [container-type:inline-size]"
+      className="relative flex w-full flex-col items-center justify-center py-[15%] @container"
     >
       <h2 className="mb-[8%] text-center font-script text-[12cqw] text-[#1a1a1a] drop-shadow-sm md:text-5xl">
         Our Moments
       </h2>
 
-      <div className="flex w-[90%] max-w-[500px] flex-col gap-[2px]">
+      <div className="flex w-[90%] max-w-125 flex-col gap-0.5">
         <GalleryImage {...top} priority />
 
-        <div className="grid w-full grid-cols-2 gap-[2px]">
+        <div className="grid w-full grid-cols-2 gap-0.5">
           <GalleryImage {...left} />
           <GalleryImage {...right} />
         </div>

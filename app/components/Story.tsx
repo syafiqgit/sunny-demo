@@ -24,14 +24,14 @@ const CHAPTERS: StoryChapter[] = [
 
 function ChapterItem({ title, body }: StoryChapter) {
   return (
-    <div className="mb-[6%] last:mb-0">
+    <article className="mb-[6%] last:mb-0">
       <h3 className="mb-[2%] text-[4cqw] font-semibold text-white drop-shadow-sm md:text-base">
         {title}
       </h3>
       <p className="mx-auto max-w-[95%] text-[3cqw] leading-relaxed text-white/95 drop-shadow-sm md:text-sm">
         {body}
       </p>
-    </div>
+    </article>
   );
 }
 
@@ -39,7 +39,7 @@ export default function Story() {
   return (
     <section
       aria-label="Our love story"
-      className="relative flex w-full min-h-[100dvh] flex-col items-center justify-center overflow-x-hidden px-[3%] py-[30%] [container-type:inline-size]"
+      className="relative flex w-full min-h-dvh flex-col items-center justify-center overflow-x-hidden px-[3%] py-[30%] @container"
     >
       <div className="relative w-full max-w-[500px]">
         {/* Wreath Atas */}
@@ -57,7 +57,7 @@ export default function Story() {
         </div>
 
         {/* Pill/Oval berisi Foto + Teks */}
-        <div className="relative w-full overflow-hidden rounded-[999px] shadow-lg">
+          <div className="relative w-full overflow-hidden rounded-[999px] shadow-lg">
           <div className="absolute inset-0 -z-10">
             <Image
               src="/images/cover-bg.jpg"

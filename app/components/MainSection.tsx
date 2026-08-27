@@ -11,18 +11,28 @@ interface MainSectionProps {
   onBackToStage: () => void;
 }
 
-export default function MainSection({
-  onBackToStage,
-}: MainSectionProps) {
+export default function MainSection({ onBackToStage }: MainSectionProps) {
   const sectionRef = useRef<HTMLDivElement>(null);
 
   const touchStartYRef = useRef(0);
   const isReturningRef = useRef(false);
+  const returnTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
     const el = sectionRef.current;
 
     if (!el) return;
+
+    const requestStageReturn = () => {
+      if (isReturningRef.current) return;
+
+      isReturningRef.current = true;
+      onBackToStage();
+      returnTimerRef.current = window.setTimeout(() => {
+        isReturningRef.current = false;
+        returnTimerRef.current = null;
+      }, 700);
+    };
 
     /**
      * Desktop / Mouse wheel
@@ -35,17 +45,7 @@ export default function MainSection({
         return;
       }
 
-      if (isReturningRef.current) {
-        return;
-      }
-
-      isReturningRef.current = true;
-
-      onBackToStage();
-
-      window.setTimeout(() => {
-        isReturningRef.current = false;
-      }, 700);
+      requestStageReturn();
     };
 
     /**
@@ -64,8 +64,7 @@ export default function MainSection({
     const handleTouchMove = (event: TouchEvent) => {
       const currentY = event.touches[0]?.clientY ?? 0;
 
-      const deltaY =
-        currentY - touchStartYRef.current;
+      const deltaY = currentY - touchStartYRef.current;
 
       const isAtTop = el.scrollTop <= 1;
 
@@ -75,17 +74,7 @@ export default function MainSection({
         return;
       }
 
-      if (isReturningRef.current) {
-        return;
-      }
-
-      isReturningRef.current = true;
-
-      onBackToStage();
-
-      window.setTimeout(() => {
-        isReturningRef.current = false;
-      }, 700);
+      requestStageReturn();
     };
 
     /**
@@ -116,30 +105,33 @@ export default function MainSection({
       passive: true,
     });
 
+    el.addEventListener("touchcancel", handleTouchEnd, {
+      passive: true,
+    });
+
     return () => {
+      if (returnTimerRef.current !== null) {
+        window.clearTimeout(returnTimerRef.current);
+        returnTimerRef.current = null;
+      }
+
+      isReturningRef.current = false;
       el.removeEventListener("wheel", handleWheel);
 
-      el.removeEventListener(
-        "touchstart",
-        handleTouchStart,
-      );
+      el.removeEventListener("touchstart", handleTouchStart);
 
-      el.removeEventListener(
-        "touchmove",
-        handleTouchMove,
-      );
+      el.removeEventListener("touchmove", handleTouchMove);
 
-      el.removeEventListener(
-        "touchend",
-        handleTouchEnd,
-      );
+      el.removeEventListener("touchend", handleTouchEnd);
+
+      el.removeEventListener("touchcancel", handleTouchEnd);
     };
   }, [onBackToStage]);
 
   return (
     <div
       ref={sectionRef}
-      className="pointer-events-auto relative h-full w-full overflow-y-auto overscroll-y-contain bg-white/85 backdrop-blur-[2px] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      className="pointer-events-auto relative isolate h-full min-h-0 w-full touch-pan-y overflow-y-auto overscroll-y-contain bg-white/85 backdrop-blur-[2px] scrollbar-none [&::-webkit-scrollbar]:hidden"
     >
       <Countdown />
       <RsvpWishes />
