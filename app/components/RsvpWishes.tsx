@@ -13,6 +13,7 @@ interface Wish {
 
 const NAME_MAX = 40;
 const MESSAGE_MAX = 300;
+let localIdSequence = 0;
 
 // Seed data. GANTI/hapus setelah backend RSVP tersedia.
 const INITIAL_WISHES: Wish[] = [
@@ -56,17 +57,12 @@ function formatRelativeTime(timestamp: number): string {
 }
 
 function createId(): string {
-  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
-    return crypto.randomUUID();
+  if (typeof globalThis.crypto?.randomUUID === "function") {
+    return globalThis.crypto.randomUUID();
   }
 
-  if (typeof crypto !== "undefined" && "getRandomValues" in crypto) {
-    const values = new Uint32Array(4);
-    crypto.getRandomValues(values);
-    return `local-${Array.from(values, (value) => value.toString(16)).join("")}`;
-  }
-
-  return `local-${Date.now()}`;
+  localIdSequence += 1;
+  return `local-${Date.now()}-${localIdSequence}`;
 }
 
 function getInitial(name: string): string {
@@ -145,7 +141,7 @@ export default function RsvpWishes() {
   );
 
   return (
-    <section className="relative w-full h-[100dvh] overflow-hidden [container-type:inline-size]">
+    <section className="relative w-full h-dvh overflow-hidden @container">
       <div className="pointer-events-auto relative z-10 flex h-full flex-col px-[6cqw] pt-[8%] pb-[4%]">
         <form
           onSubmit={handleSubmit}
@@ -247,7 +243,7 @@ export default function RsvpWishes() {
                     <p className="truncate text-[3.6cqw] font-bold text-[#5a3d2b] md:text-base">
                       {wish.name}
                     </p>
-                    <p className="mt-[0.5%] break-words text-[3.2cqw] text-[#2a2a2a]/85 md:text-sm">
+                    <p className="mt-[0.5%] wrap-break-word text-[3.2cqw] text-[#2a2a2a]/85 md:text-sm">
                       {wish.message}
                     </p>
                     <p className="mt-[1%] text-[2.6cqw] italic text-[#2a2a2a]/45 md:text-xs">
