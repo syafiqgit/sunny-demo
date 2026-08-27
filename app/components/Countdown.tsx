@@ -140,12 +140,9 @@ export default function Countdown() {
             Wishes
           </p>
           <p className="text-[3cqw] md:text-xs text-[#2a2a2a]/80 max-w-[70cqw] text-left">
-            Tell us you&apos;re coming and leave a few words—we&apos;d love
-            to hear from you!
+            Tell us you&apos;re coming and leave a few words—we&apos;d love to
+            hear from you!
           </p>
-          <span className="mt-[4%] text-[2.6cqw] md:text-[11px] text-[#2a2a2a]/50 animate-bounce self-center">
-            Swipe up
-          </span>
         </div>
       </div>
     </section>
