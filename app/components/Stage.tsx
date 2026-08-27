@@ -286,7 +286,7 @@ export default function Stage({
         {/* LAYER 3: Couple Cutout */}
         <div className="absolute bottom-[18cqw] left-1/2 -translate-x-1/2 w-[58%] max-w-85 z-20 pointer-events-none">
           <Image
-            src="/images/couple.png"
+            src="/images/inv_787_BSoyubpg.jpg"
             alt="Ilustrasi Vincent dan Natasha"
             width={600}
             height={900}
