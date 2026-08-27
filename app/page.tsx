@@ -5,9 +5,13 @@ import CoverPage from "./components/CoverPage";
 import Stage from "./components/Stage";
 import MainSection from "./components/MainSection";
 
-const SECTION_COUNT = 3;
+const SECTION_COUNT = 8;
 const LOADING_DURATION_MS = 2000;
 const OPEN_THRESHOLD = 0.5;
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(Math.max(value, min), max);
+}
 
 export default function Home() {
   const [isLoading, setIsLoading] = useState(true);
@@ -40,15 +44,10 @@ export default function Home() {
 
     rafRef.current = requestAnimationFrame(() => {
       const el = containerRef.current;
-
       if (!el) return;
 
       const rawProgress = el.scrollTop / el.clientHeight;
-
-      const clampedProgress = Math.min(
-        Math.max(rawProgress, 0),
-        SECTION_COUNT - 1,
-      );
+      const clampedProgress = clamp(rawProgress, 0, SECTION_COUNT - 1);
 
       setScrollProgress(clampedProgress);
     });
@@ -62,18 +61,11 @@ export default function Home() {
     };
   }, []);
 
-  /**
-   * Scroll ke section utama berdasarkan index.
-   * 0 = Cover
-   * 1 = Stage
-   * 2 = Main Section
-   */
   const scrollToSection = useCallback((sectionIndex: number) => {
     const el = containerRef.current;
-
     if (!el) return;
 
-    const targetIndex = Math.min(Math.max(sectionIndex, 0), SECTION_COUNT - 1);
+    const targetIndex = clamp(sectionIndex, 0, SECTION_COUNT - 1);
 
     el.scrollTo({
       top: targetIndex * el.clientHeight,
@@ -81,23 +73,24 @@ export default function Home() {
     });
   }, []);
 
-  /**
-   * Cover -> Stage
-   */
   const handleOpen = useCallback(() => {
-    scrollToSection(1);
+    setHasOpened(true);
+    setTimeout(() => {
+      scrollToSection(1);
+    }, 50);
   }, [scrollToSection]);
 
-  /**
-   * Main Section -> Stage
-   */
   const handleBackToStage = useCallback(() => {
-    scrollToSection(1);
+    scrollToSection(6);
   }, [scrollToSection]);
 
-  const coverToStage = Math.min(Math.max(scrollProgress, 0), 1);
+  const coverToStage = clamp(scrollProgress, 0, 1);
+  // Diizinkan hingga 1.2 agar Stage dapat mendeteksi transisi saat scroll masuk ke MainSection
+  const stageRevealProgress = clamp((scrollProgress - 1) / 5, 0, 1.2);
+  const mainSectionProgress = clamp(scrollProgress - 6, 0, 1);
 
-  const stageToCombined = Math.min(Math.max(scrollProgress - 1, 0), 1);
+  const coverOpacity = clamp(1 - coverToStage * 2, 0, 1);
+  const stageOpacity = clamp(coverToStage * 2, 0, 1);
 
   return (
     <main className="mobile-canvas relative">
@@ -122,43 +115,47 @@ export default function Home() {
             !hasOpened ? "overflow-hidden" : "overflow-y-auto"
           }`}
         >
-          {/* COVER */}
+          {/* Index 0: Cover */}
           <div className="h-[100dvh] snap-start snap-always" />
-
-          {/* STAGE */}
+          {/* Index 1: Stage - FASE 1: Quote Awal */}
           <div className="h-[100dvh] snap-start snap-always" />
-
-          {/* MAIN SECTION */}
+          {/* Index 2: Stage - FASE 2: Informasi Pria */}
+          <div className="h-[100dvh] snap-start snap-always" />
+          {/* Index 3: Stage - FASE 3: Informasi Wanita */}
+          <div className="h-[100dvh] snap-start snap-always" />
+          {/* Index 4: Stage - FASE 4: Informasi Acara */}
+          <div className="h-[100dvh] snap-start snap-always" />
+          {/* Index 5: Stage - FASE 5: Dress Code */}
+          <div className="h-[100dvh] snap-start snap-always" />
+          {/* Index 6: Stage - FASE 6: Zoom Out Full Stage & Closing Quote */}
+          <div className="h-[100dvh] snap-start snap-always" />
+          {/* Index 7: Main Section */}
           <div className="h-[100dvh] snap-start snap-always" />
         </div>
 
         {/* Visual Layer */}
         <div className="pointer-events-none absolute inset-0 z-10">
-          {/* COVER */}
+          {/* COVER PAGE */}
           <div
-            className="pointer-events-none absolute inset-0 transition-opacity duration-1000 ease-in-out"
-            style={{
-              opacity: coverToStage < 0.5 ? 1 : 0,
-            }}
+            className="pointer-events-none absolute inset-0 transition-opacity duration-300 ease-out"
+            style={{ opacity: coverOpacity }}
           >
             <CoverPage onOpen={handleOpen} hasOpened={hasOpened} />
           </div>
 
           {/* STAGE */}
           <div
-            className="pointer-events-none absolute inset-0 transition-opacity duration-1000 ease-in-out"
-            style={{
-              opacity: coverToStage >= 0.5 ? 1 : 0,
-            }}
+            className="pointer-events-none absolute inset-0 transition-opacity duration-300 ease-out"
+            style={{ opacity: stageOpacity }}
           >
-            {!isLoading && <Stage revealProgress={stageToCombined} />}
+            {!isLoading && <Stage revealProgress={stageRevealProgress} />}
           </div>
 
           {/* MAIN SECTION */}
           <div
             className="pointer-events-none absolute inset-0 will-change-transform"
             style={{
-              transform: `translateY(${(1 - stageToCombined) * 100}%)`,
+              transform: `translate3d(0, ${(1 - mainSectionProgress) * 100}%, 0)`,
             }}
           >
             {!isLoading && <MainSection onBackToStage={handleBackToStage} />}

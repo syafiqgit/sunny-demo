@@ -139,7 +139,7 @@ export default function MainSection({
   return (
     <div
       ref={sectionRef}
-      className="pointer-events-auto relative h-full w-full overflow-y-auto overscroll-y-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      className="pointer-events-auto relative h-full w-full overflow-y-auto overscroll-y-contain bg-white/85 backdrop-blur-[2px] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
     >
       <Countdown />
       <RsvpWishes />
