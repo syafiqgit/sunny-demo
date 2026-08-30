@@ -41,11 +41,11 @@ export default function Story() {
       aria-label="Our love story"
       className="relative flex w-full min-h-dvh flex-col items-center justify-center overflow-x-hidden px-[3%] py-[30%] @container"
     >
-      <div className="relative w-full max-w-[500px]">
+      <div className="relative w-full max-w-125">
         {/* Wreath Atas */}
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute -top-[12%] left-1/2 z-20 w-[115%] max-w-[550px] -translate-x-1/2 rotate-180 select-none"
+          className="pointer-events-none absolute top-[-12%] left-1/2 z-20 w-[115%] max-w-137.5 -translate-x-1/2 rotate-180 select-none"
         >
           <Image
             src="/images/sunny_decor1.webp"
@@ -57,7 +57,7 @@ export default function Story() {
         </div>
 
         {/* Pill/Oval berisi Foto + Teks */}
-          <div className="relative w-full overflow-hidden rounded-[999px] shadow-lg">
+        <div className="relative w-full overflow-hidden rounded-[999px] shadow-lg">
           <div className="absolute inset-0 -z-10">
             <Image
               src="/images/cover-bg.jpg"
@@ -85,7 +85,7 @@ export default function Story() {
         {/* Wreath Bawah */}
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute -bottom-[12%] left-1/2 z-20 w-[115%] max-w-[550px] -translate-x-1/2 select-none"
+          className="pointer-events-none absolute bottom-[-12%] left-1/2 z-20 w-[115%] max-w-137.5 -translate-x-1/2 select-none"
         >
           <Image
             src="/images/sunny_decor1.webp"

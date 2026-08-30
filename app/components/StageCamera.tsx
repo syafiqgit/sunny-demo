@@ -18,18 +18,20 @@ export default function StageCamera({
   children,
 }: StageCameraProps) {
   return (
-    <motion.div
-      className="absolute top-1/2 left-1/2 w-auto h-auto min-w-full min-h-full aspect-3/4 bg-[#7bbff1] overflow-hidden will-change-transform"
-      style={{
-        x: "-50%",
-        y: "-50%",
-        scale,
-        translateX,
-        translateY,
-        transformOrigin: "50% 45%",
-      }}
-    >
-      {children}
-    </motion.div>
+    <div className="absolute inset-0 overflow-hidden bg-[#7bbff1]">
+      <motion.div
+        className="relative w-full h-full"
+        style={{
+          scale,
+          x: translateX,
+          y: translateY,
+          // Ubah dari 60.6% menjadi 45% - 50% agar center point naik ke area dada/wajah
+          // Ini mencegah frame "tenggelam" ke arah perut saat zoom ekstrem
+          transformOrigin: "50% 48%",
+        }}
+      >
+        {children}
+      </motion.div>
+    </div>
   );
 }
