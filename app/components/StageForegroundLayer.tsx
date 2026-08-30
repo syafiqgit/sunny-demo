@@ -2,12 +2,14 @@
 
 import Image from "next/image";
 import { motion } from "framer-motion";
-import type { PlaneMotion } from "./Stage.types";
+import type { PlaneMotion, StageAssets } from "./Stage.types";
 
 type StageForegroundLayerProps = Pick<
   PlaneMotion,
   "field" | "nearGrass" | "frontGrass"
->;
+> & {
+  assets: Pick<StageAssets, "field" | "nearGrass" | "frontGrass">;
+};
 
 /**
  * The three flower bands, back to front: the mid field the couple stands in,
@@ -29,6 +31,7 @@ export default function StageForegroundLayer({
   field,
   nearGrass,
   frontGrass,
+  assets,
 }: StageForegroundLayerProps) {
   return (
     <>
@@ -42,10 +45,10 @@ export default function StageForegroundLayer({
         aria-hidden="true"
       >
         <Image
-          src="/images/sunny_bg1_ext.webp"
+          src={assets.field.src}
           alt=""
-          width={1500}
-          height={708}
+          width={assets.field.width}
+          height={assets.field.height}
           sizes="1150px"
           quality={95}
           aria-hidden="true"
@@ -64,10 +67,10 @@ export default function StageForegroundLayer({
         aria-hidden="true"
       >
         <Image
-          src="/images/sunny_fg2_ext.webp"
+          src={assets.nearGrass.src}
           alt=""
-          width={1500}
-          height={568}
+          width={assets.nearGrass.width}
+          height={assets.nearGrass.height}
           sizes="1600px"
           quality={95}
           aria-hidden="true"
@@ -88,10 +91,10 @@ export default function StageForegroundLayer({
         aria-hidden="true"
       >
         <Image
-          src="/images/sunny_fg1_ext.webp"
+          src={assets.frontGrass.src}
           alt=""
-          width={1500}
-          height={568}
+          width={assets.frontGrass.width}
+          height={assets.frontGrass.height}
           sizes="1750px"
           quality={95}
           aria-hidden="true"

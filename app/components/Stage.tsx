@@ -12,16 +12,7 @@ import {
 } from "framer-motion";
 import StageOverlays from "./StageOverlays";
 import StageScene from "./StageScene";
-import {
-  DEFAULT_BRIDE,
-  DEFAULT_CLOSING_QUOTE,
-  DEFAULT_DRESS_CODE,
-  DEFAULT_GROOM,
-  DEFAULT_MATRIMONY,
-  DEFAULT_RECEPTION,
-  type PlaneTransform,
-  type StageProps,
-} from "./Stage.types";
+import type { PlaneTransform, StageProps } from "./Stage.types";
 
 const greatVibes = Great_Vibes({
   subsets: ["latin"],
@@ -31,11 +22,13 @@ const greatVibes = Great_Vibes({
 
 export type {
   BrideInfo,
-  ClosingQuoteInfo,
   ColorSwatch,
   DressCodeInfo,
   EventDetail,
   GroomInfo,
+  QuoteInfo,
+  StageAssets,
+  StageContent,
   StageProps,
 } from "./Stage.types";
 
@@ -141,13 +134,16 @@ function usePlane(dolly: MotionValue<number>, name: PlaneName): PlaneTransform {
 
 export default function Stage({
   revealProgress = 0,
-  groom = DEFAULT_GROOM,
-  bride = DEFAULT_BRIDE,
-  matrimony = DEFAULT_MATRIMONY,
-  reception = DEFAULT_RECEPTION,
-  dressCode = DEFAULT_DRESS_CODE,
-  closingQuote = DEFAULT_CLOSING_QUOTE,
+  groom,
+  bride,
+  matrimony,
+  reception,
+  dressCode,
+  openingQuote,
+  closingQuote,
   streamingUrl = "#",
+  assets,
+  coupleNames,
 }: StageProps) {
   const shouldReduceMotion = useReducedMotion();
   const rawProgress = useMotionValue(revealProgress);
@@ -341,6 +337,8 @@ export default function Stage({
         couple={{ ...couple, opacity: coupleOpacity }}
         nearGrass={nearGrass}
         frontGrass={frontGrass}
+        assets={assets}
+        coupleNames={coupleNames}
       />
       {/* Outside the camera on purpose: the wash is part of the interface, so
           panning it would drag its own edge into view. */}
@@ -358,8 +356,10 @@ export default function Stage({
         matrimony={matrimony}
         reception={reception}
         dressCode={dressCode}
+        openingQuote={openingQuote}
         closingQuote={closingQuote}
         streamingUrl={streamingUrl}
+        assets={assets}
         groomOpacity={groomOpacity}
         groomX={groomX}
         groomY={groomY}

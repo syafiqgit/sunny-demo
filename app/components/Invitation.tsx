@@ -1,15 +1,22 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import CoverPage from "./components/CoverPage";
-import MainSection from "./components/MainSection";
-import MusicToggle, { type MusicToggleHandle } from "./components/MusicToggle";
-import Stage from "./components/Stage";
-import { useChapterScroll } from "./components/useChapterScroll";
+import CoverPage from "./CoverPage";
+import MainSection from "./MainSection";
+import MusicToggle, { type MusicToggleHandle } from "./MusicToggle";
+import Stage from "./Stage";
+import { useChapterScroll } from "./useChapterScroll";
+import type { TemplateConfig } from "../templates/types";
+
+interface InvitationProps {
+  /** Seluruh isi tema. Lihat app/templates/types.ts. */
+  template: TemplateConfig;
+  /** Nama tamu di sampul; nanti bisa datang dari query string. */
+  guestName?: string;
+}
 
 const SECTION_COUNT = 8;
 const LOADING_DURATION_MS = 2000;
-const MUSIC_SRC = "/audios/michael-buble-love.mp3";
 
 // Each entry is the stageRevealProgress value for that beat of the story -
 // groom; bride; the empty-grass event framing; dress code; closing quote -
@@ -74,7 +81,7 @@ function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
 }
 
-export default function Home() {
+export default function Invitation({ template, guestName }: InvitationProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [hasOpened, setHasOpened] = useState(false);
   const [stageChapter, setStageChapter] = useState(0);
@@ -335,7 +342,14 @@ export default function Home() {
               transition: `opacity ${COVER_FADE_MS}ms ease-in-out`,
             }}
           >
-            <CoverPage onOpen={handleOpen} hasOpened={hasOpened} />
+            <CoverPage
+              coupleNames={template.coupleNames}
+              weddingDate={template.weddingDate}
+              coverImage={template.coverImage}
+              guestName={guestName}
+              onOpen={handleOpen}
+              hasOpened={hasOpened}
+            />
           </div>
 
           <div
@@ -345,7 +359,13 @@ export default function Home() {
               transition: `opacity ${COVER_FADE_MS}ms ease-in-out`,
             }}
           >
-            {!isLoading && <Stage revealProgress={stageRevealProgress} />}
+            {!isLoading && (
+              <Stage
+                {...template.stage}
+                coupleNames={template.coupleNames}
+                revealProgress={stageRevealProgress}
+              />
+            )}
           </div>
 
           <div
@@ -375,12 +395,17 @@ export default function Home() {
               WebkitMaskImage: panelMoving ? PANEL_FEATHER : undefined,
             }}
           >
-            {!isLoading && <MainSection onBackToStage={handleBackToStage} />}
+            {!isLoading && (
+              <MainSection
+                template={template}
+                onBackToStage={handleBackToStage}
+              />
+            )}
           </div>
         </div>
       </div>
 
-      <MusicToggle ref={musicRef} src={MUSIC_SRC} visible={hasOpened} />
+      <MusicToggle ref={musicRef} src={template.musicSrc} visible={hasOpened} />
     </main>
   );
 }

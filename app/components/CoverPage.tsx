@@ -6,16 +6,20 @@ import { Mail, ChevronDown } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 
 interface CoverPageProps {
+  coupleNames: string;
+  weddingDate: string;
+  coverImage: string;
   onOpen?: () => void;
   hasOpened?: boolean;
   guestName?: string;
 }
 
-const COUPLE_NAMES = "Vincent & Natasha";
-const WEDDING_DATE = "Saturday, April 25, 2026";
 const DEFAULT_GUEST_NAME = "Guest";
 
 function CoverPage({
+  coupleNames,
+  weddingDate,
+  coverImage,
   onOpen,
   hasOpened = false,
   guestName = DEFAULT_GUEST_NAME,
@@ -29,8 +33,8 @@ function CoverPage({
     >
       <div className="absolute inset-0">
         <Image
-          src="/images/cover-bg.jpg"
-          alt={`Wedding of ${COUPLE_NAMES}`}
+          src={coverImage}
+          alt={`Wedding of ${coupleNames}`}
           fill
           priority
           fetchPriority="high"
@@ -50,9 +54,9 @@ function CoverPage({
           id="cover-title"
           className="my-1 max-w-full font-script text-[clamp(2.75rem,12vw,3.75rem)] leading-none"
         >
-          {COUPLE_NAMES}
+          {coupleNames}
         </h1>
-        <p className="text-sm font-medium tracking-wide">{WEDDING_DATE}</p>
+        <p className="text-sm font-medium tracking-wide">{weddingDate}</p>
 
         <div className="h-6" aria-hidden="true" />
 

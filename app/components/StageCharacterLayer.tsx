@@ -2,9 +2,13 @@
 
 import Image from "next/image";
 import { motion } from "framer-motion";
-import type { PlaneMotion } from "./Stage.types";
+import type { PlaneMotion, SizedImage } from "./Stage.types";
 
-type StageCharacterLayerProps = Pick<PlaneMotion, "couple">;
+type StageCharacterLayerProps = Pick<PlaneMotion, "couple"> & {
+  asset: SizedImage;
+  /** Nama pasangan - hanya dipakai untuk alt text. */
+  coupleNames: string;
+};
 
 /**
  * The couple cut-out, between the mid field and the foreground flowers.
@@ -19,6 +23,8 @@ type StageCharacterLayerProps = Pick<PlaneMotion, "couple">;
  */
 export default function StageCharacterLayer({
   couple,
+  asset,
+  coupleNames,
 }: StageCharacterLayerProps) {
   return (
     <motion.div
@@ -31,10 +37,10 @@ export default function StageCharacterLayer({
       }}
     >
       <Image
-        src="/images/inv_787_BSoyubpg.jpg"
-        alt="Ilustrasi Vincent dan Natasha"
-        width={1500}
-        height={1500}
+        src={asset.src}
+        alt={`Ilustrasi ${coupleNames}`}
+        width={asset.width}
+        height={asset.height}
         sizes="560px"
         quality={100}
         priority

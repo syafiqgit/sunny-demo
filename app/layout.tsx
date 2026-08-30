@@ -18,8 +18,9 @@ const scriptFont = Alex_Brush({
 });
 
 export const metadata: Metadata = {
-  title: "The Wedding of Vincent & Natasha",
-  description: "Saturday, April 25, 2026",
+  title: "UndanganCuyy - Undangan Pernikahan Digital",
+  description:
+    "Pilih template undangan pernikahan digital yang elegan, bisa dibuka di ponsel mana saja, lengkap dengan musik, galeri, dan RSVP.",
 };
 
 // `viewportFit: "cover"` is what makes the env(safe-area-inset-*) padding on

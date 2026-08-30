@@ -4,8 +4,13 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { useReveal } from "./useReveal";
+import type { SizedImage } from "./Stage.types";
 
-const TARGET_MS = new Date("2027-01-01T00:00:00+07:00").getTime(); // GANTI ke tanggal asli
+interface CountdownProps {
+  /** Sasaran hitung mundur, ISO 8601 dengan zona waktu. */
+  targetIso: string;
+  decorImage: SizedImage;
+}
 
 const SECOND = 1000;
 const MINUTE = 60 * SECOND;
@@ -21,8 +26,8 @@ interface TimeLeft {
 
 const ZERO_TIME: TimeLeft = { days: 0, hours: 0, minutes: 0, seconds: 0 };
 
-function getTimeLeft(): TimeLeft {
-  const diff = Math.max(TARGET_MS - Date.now(), 0);
+function getTimeLeft(targetMs: number): TimeLeft {
+  const diff = Math.max(targetMs - Date.now(), 0);
   return {
     days: Math.floor(diff / DAY),
     hours: Math.floor((diff % DAY) / HOUR),
@@ -33,7 +38,9 @@ function getTimeLeft(): TimeLeft {
 
 const UNIT_LABELS = ["Days", "Hours", "Minutes", "Seconds"] as const;
 
-export default function Countdown() {
+export default function Countdown({ targetIso, decorImage }: CountdownProps) {
+  const targetMs = Date.parse(targetIso);
+
   // Hindari hydration mismatch: server merender 00:00:00:00 dan nilai asli
   // baru dihitung setelah mount di client.
   const [time, setTime] = useState<TimeLeft | null>(null);
@@ -42,7 +49,7 @@ export default function Countdown() {
     let timeoutId = 0;
 
     const tick = () => {
-      setTime(getTimeLeft());
+      setTime(getTimeLeft(targetMs));
       // Re-aligned to the wall clock on every tick rather than a flat 1000ms:
       // a fixed interval drifts, and drifts badly once a background tab has
       // been throttled, so the display would visibly skip a second.
@@ -65,7 +72,7 @@ export default function Countdown() {
       stop();
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, []);
+  }, [targetMs]);
 
   const display = time ?? ZERO_TIME;
   const isOver =
@@ -102,10 +109,10 @@ export default function Countdown() {
         {...bloom}
       >
         <Image
-          src="/images/sunny_decor2.webp" // GANTI ke path asset bunga kamu
+          src={decorImage.src}
           alt=""
-          width={600}
-          height={900}
+          width={decorImage.width}
+          height={decorImage.height}
           sizes="(max-width: 500px) 85vw, 425px"
           className="w-full h-auto"
         />

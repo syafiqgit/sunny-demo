@@ -6,8 +6,10 @@ import Countdown from "./Countdown";
 import RsvpWishes from "./RsvpWishes";
 import Gallery from "./Gallery";
 import Closing from "./Closing";
+import type { TemplateConfig } from "../templates/types";
 
 interface MainSectionProps {
+  template: TemplateConfig;
   onBackToStage: () => void;
 }
 
@@ -20,7 +22,7 @@ const RETURN_LOCK_MS = 700;
 const WHEEL_THRESHOLD = 4;
 const TOUCH_THRESHOLD = 12;
 
-function MainSection({ onBackToStage }: MainSectionProps) {
+function MainSection({ template, onBackToStage }: MainSectionProps) {
   const sectionRef = useRef<HTMLDivElement>(null);
   const isReturningRef = useRef(false);
   const returnTimerRef = useRef<number | null>(null);
@@ -98,11 +100,18 @@ function MainSection({ onBackToStage }: MainSectionProps) {
       ref={sectionRef}
       className="scrollbar-none pointer-events-auto relative isolate h-full min-h-0 w-full touch-pan-y overflow-y-auto overscroll-y-contain bg-white/85 backdrop-blur-[2px]"
     >
-      <Countdown />
-      <RsvpWishes />
-      <Story />
-      <Gallery />
-      <Closing />
+      <Countdown
+        targetIso={template.countdownTarget}
+        decorImage={template.countdown.decorImage}
+      />
+      <RsvpWishes seedWishes={template.wishes} />
+      <Story {...template.story} />
+      <Gallery photos={template.gallery} />
+      <Closing
+        coupleNames={template.coupleNames}
+        gift={template.gift}
+        closing={template.closing}
+      />
     </div>
   );
 }

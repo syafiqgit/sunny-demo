@@ -3,6 +3,12 @@
 import { useCallback, useState, useSyncExternalStore } from "react";
 import { motion } from "framer-motion";
 import { useReveal } from "./useReveal";
+import type { SeedWish } from "../templates/types";
+
+interface RsvpWishesProps {
+  /** Ucapan bawaan dari tema; dipakai sampai backend RSVP tersedia. */
+  seedWishes: SeedWish[];
+}
 
 type Attendance = "yes" | "no" | "";
 
@@ -17,39 +23,16 @@ const NAME_MAX = 40;
 const MESSAGE_MAX = 300;
 let localIdSequence = 0;
 
-// Seed data. GANTI/hapus setelah backend RSVP tersedia.
-//
-// Fixed timestamps, not `Date.now() - n`: this module is evaluated once when
-// the server process starts and again in the browser, so a relative seed made
-// the two disagree by however long the server had been up - and the rendered
-// "x months ago" then failed hydration.
-const INITIAL_WISHES: Wish[] = [
-  {
-    id: "seed-1",
-    name: "R",
-    message:
-      "Congrats buat pasangan baru semoga semuanya berjalan dengan lancar!",
-    createdAt: Date.parse("2026-05-30T14:00:00Z"),
-  },
-  {
-    id: "seed-2",
-    name: "Nayla",
-    message: "Happy Wedding",
-    createdAt: Date.parse("2026-04-12T09:00:00Z"),
-  },
-  {
-    id: "seed-3",
-    name: "Lauren",
-    message: "Congrats!",
-    createdAt: Date.parse("2026-01-25T17:00:00Z"),
-  },
-  {
-    id: "seed-4",
-    name: "Chelsea",
-    message: "Happy wedding ❤️",
-    createdAt: Date.parse("2026-01-02T08:00:00Z"),
-  },
-];
+// Timestamp tema disimpan sebagai string ISO tetap, bukan `Date.now() - n`:
+// modul ini dievaluasi sekali saat proses server hidup dan sekali lagi di
+// browser, jadi nilai relatif membuat keduanya berselisih sepanjang umur
+// proses server - dan label "x months ago" yang dirender lalu gagal hydration.
+function toWishes(seed: SeedWish[]): Wish[] {
+  return seed.map((wish) => ({
+    ...wish,
+    createdAt: Date.parse(wish.createdAt),
+  }));
+}
 
 function formatRelativeTime(timestamp: number, now: number): string {
   const diffMs = Math.max(now - timestamp, 0);
@@ -91,11 +74,13 @@ function getInitial(name: string): string {
 const FIELD_CLASS =
   "w-full rounded-lg border border-[#2a2a2a]/20 bg-white px-[4cqw] py-[3cqw] text-[3.4cqw] text-[#2a2a2a] shadow-sm outline-none transition-shadow placeholder:text-[#2a2a2a]/50 focus:ring-2 focus:ring-[#7a5c48]/40 disabled:opacity-60 md:px-4 md:py-2.5 md:text-sm";
 
-export default function RsvpWishes() {
+export default function RsvpWishes({ seedWishes }: RsvpWishesProps) {
   const [name, setName] = useState("");
   const [message, setMessage] = useState("");
   const [attendance, setAttendance] = useState<Attendance>("");
-  const [wishes, setWishes] = useState<Wish[]>(INITIAL_WISHES);
+  // Initialiser malas: `toWishes` hanya berjalan pada render pertama, bukan
+  // tiap render seperti kalau nilainya dihitung langsung di argumen.
+  const [wishes, setWishes] = useState<Wish[]>(() => toWishes(seedWishes));
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   // The page is statically prerendered, so a relative label rendered on the

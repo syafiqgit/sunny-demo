@@ -1,6 +1,6 @@
 import type { MotionValue } from "framer-motion";
 
-export interface GroomInfo {
+export interface PersonInfo {
   scriptName: string;
   fullName: string;
   parentsLine1: string;
@@ -8,13 +8,8 @@ export interface GroomInfo {
   instagramHandle: string;
 }
 
-export interface BrideInfo {
-  scriptName: string;
-  fullName: string;
-  parentsLine1: string;
-  parentsLine2: string;
-  instagramHandle: string;
-}
+export type GroomInfo = PersonInfo;
+export type BrideInfo = PersonInfo;
 
 export interface EventDetail {
   title: string;
@@ -31,25 +26,74 @@ export interface ColorSwatch {
 }
 
 export interface DressCodeInfo {
-  title?: string;
-  description?: string;
-  colors?: ColorSwatch[];
+  title: string;
+  description: string;
+  colors: ColorSwatch[];
 }
 
-export interface ClosingQuoteInfo {
+export interface QuoteInfo {
   text: string;
   citation?: string;
 }
 
-export interface StageProps {
-  revealProgress?: number;
-  groom?: GroomInfo;
-  bride?: BrideInfo;
-  matrimony?: EventDetail;
-  reception?: EventDetail;
-  dressCode?: DressCodeInfo;
-  closingQuote?: ClosingQuoteInfo;
+/** Alias historis - dipakai untuk kutipan pembuka maupun penutup. */
+export type ClosingQuoteInfo = QuoteInfo;
+
+/**
+ * Gambar yang dirender tanpa `fill`, jadi ukuran alaminya ikut dibawa supaya
+ * next/image bisa memesan ruangnya dan tidak ada layout shift.
+ */
+export interface SizedImage {
+  src: string;
+  width: number;
+  height: number;
+}
+
+/**
+ * Artwork panggung, jauh ke dekat.
+ *
+ * PENTING untuk tema baru: hanya `src` (dan ukuran alaminya) yang tinggal
+ * diganti. Transform yang memasang tiap lapis pada tempatnya - skala, geseran,
+ * dan tinggi minimumnya - hidup di komponen lapisannya masing-masing dan
+ * diukur terhadap komposisi artwork "sunny". Artwork baru harus digambar pada
+ * spesifikasi yang sama (lebar desain 500px, ditambatkan ke tepi bawah
+ * panggung, horizon dan garis bunga pada ketinggian yang sama) atau angka-
+ * angka itu perlu diukur ulang. Lihat catatan di tiap komponen Stage*Layer.
+ */
+export interface StageAssets {
+  /** Langit + tajuk pohon - bidang terjauh. */
+  canopy: SizedImage;
+  /** Hamparan bunga tempat pasangan berdiri. */
+  field: SizedImage;
+  /** Rumpun bunga tengah, digambar di depan pasangan. */
+  nearGrass: SizedImage;
+  /** Rumpun bunga terdepan. */
+  frontGrass: SizedImage;
+  /** Potongan gambar pasangan. */
+  couple: SizedImage;
+  /** Awan di belakang kutipan pembuka (dirender dengan `fill`). */
+  quoteCloud: string;
+  /** Sapuan kabut di balik detail acara (dirender dengan `fill`). */
+  eventWash: string;
+}
+
+/** Seluruh isi panggung untuk satu tema. */
+export interface StageContent {
+  groom: GroomInfo;
+  bride: BrideInfo;
+  matrimony: EventDetail;
+  reception: EventDetail;
+  dressCode: DressCodeInfo;
+  openingQuote: QuoteInfo;
+  closingQuote: QuoteInfo;
   streamingUrl?: string;
+  assets: StageAssets;
+}
+
+export interface StageProps extends StageContent {
+  revealProgress?: number;
+  /** Nama pasangan - hanya dipakai untuk alt text potongan gambar. */
+  coupleNames: string;
 }
 
 export interface SceneMotion {
@@ -97,54 +141,3 @@ export interface OverlayMotion {
   dressCodeY: MotionValue<number>;
   closingQuoteOpacity: MotionValue<number>;
 }
-
-export const DEFAULT_GROOM: GroomInfo = {
-  scriptName: "Vincent",
-  fullName: "Vincent Raphael",
-  parentsLine1: "Mr. Vincent's Father &",
-  parentsLine2: "Mrs. Vincent's Mother",
-  instagramHandle: "vincent",
-};
-
-export const DEFAULT_BRIDE: BrideInfo = {
-  scriptName: "Natasha",
-  fullName: "Natasha Aurelia",
-  parentsLine1: "Mr. Natasha's Father &",
-  parentsLine2: "Mrs. Natasha's Mother",
-  instagramHandle: "natasha",
-};
-
-export const DEFAULT_MATRIMONY: EventDetail = {
-  title: "Holy Matrimony",
-  date: "Saturday, April 25, 2026",
-  time: "13.00 - 14.00 WIB",
-  venue: "Plaza Rafaela Garden",
-  address: "Jl. Suryalaya Indah, Buah Batu, Bandung",
-  mapsUrl: "https://maps.google.com",
-};
-
-export const DEFAULT_RECEPTION: EventDetail = {
-  title: "Reception",
-  date: "Saturday, April 25, 2026",
-  time: "14.00 - 17.00 WIB",
-  venue: "Plaza Rafaela Garden",
-  address: "Jl. Suryalaya Indah, Buah Batu, Bandung",
-  mapsUrl: "https://maps.google.com",
-};
-
-export const DEFAULT_DRESS_CODE: Required<DressCodeInfo> = {
-  title: "Dresscode",
-  description:
-    "We would love for our guests to wear these colors on our special day.",
-  // Read off the reference; the swatches carry no visible labels, so the
-  // names only key the list.
-  colors: [
-    { name: "Warm Sand", hex: "#A98D76" },
-    { name: "White", hex: "#FFFFFF" },
-  ],
-};
-
-export const DEFAULT_CLOSING_QUOTE: ClosingQuoteInfo = {
-  text: "And over all these virtues put on love, which binds them all together in perfect unity.",
-  citation: "Colossians 3:14",
-};

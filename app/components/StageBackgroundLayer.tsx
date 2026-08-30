@@ -2,9 +2,11 @@
 
 import Image from "next/image";
 import { motion } from "framer-motion";
-import type { PlaneMotion } from "./Stage.types";
+import type { PlaneMotion, SizedImage } from "./Stage.types";
 
-type StageBackgroundLayerProps = Pick<PlaneMotion, "canopy">;
+type StageBackgroundLayerProps = Pick<PlaneMotion, "canopy"> & {
+  asset: SizedImage;
+};
 
 /**
  * Sky + tree canopy - the far plane of the dolly zoom.
@@ -23,6 +25,7 @@ type StageBackgroundLayerProps = Pick<PlaneMotion, "canopy">;
  */
 export default function StageBackgroundLayer({
   canopy,
+  asset,
 }: StageBackgroundLayerProps) {
   return (
     <motion.div
@@ -36,10 +39,10 @@ export default function StageBackgroundLayer({
       aria-hidden="true"
     >
       <Image
-        src="/images/sunny_bg2_ext.webp"
+        src={asset.src}
         alt=""
-        width={1050}
-        height={1280}
+        width={asset.width}
+        height={asset.height}
         sizes="900px"
         quality={95}
         priority

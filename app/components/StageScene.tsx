@@ -1,12 +1,16 @@
 "use client";
 
-import type { PlaneMotion, SceneMotion } from "./Stage.types";
+import type { PlaneMotion, SceneMotion, StageAssets } from "./Stage.types";
 import StageBackgroundLayer from "./StageBackgroundLayer";
 import StageCamera from "./StageCamera";
 import StageCharacterLayer from "./StageCharacterLayer";
 import StageForegroundLayer from "./StageForegroundLayer";
 
-type StageSceneProps = Pick<SceneMotion, "scale" | "translateX"> & PlaneMotion;
+type StageSceneProps = Pick<SceneMotion, "scale" | "translateX"> &
+  PlaneMotion & {
+    assets: StageAssets;
+    coupleNames: string;
+  };
 
 /**
  * The camera moves the whole scene; each layer then carries its own plane
@@ -23,16 +27,23 @@ export default function StageScene({
   couple,
   nearGrass,
   frontGrass,
+  assets,
+  coupleNames,
 }: StageSceneProps) {
   return (
     <StageCamera scale={scale} translateX={translateX}>
-      <StageBackgroundLayer canopy={canopy} />
+      <StageBackgroundLayer canopy={canopy} asset={assets.canopy} />
       <StageForegroundLayer
         field={field}
         nearGrass={nearGrass}
         frontGrass={frontGrass}
+        assets={assets}
       />
-      <StageCharacterLayer couple={couple} />
+      <StageCharacterLayer
+        couple={couple}
+        asset={assets.couple}
+        coupleNames={coupleNames}
+      />
     </StageCamera>
   );
 }

@@ -3,26 +3,16 @@
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { alternate, useReveal } from "./useReveal";
+import type { SizedImage } from "./Stage.types";
+import type { StoryChapter } from "../templates/types";
 
-interface StoryChapter {
+type StoryProps = {
   title: string;
-  body: string;
-}
-
-const CHAPTERS: StoryChapter[] = [
-  {
-    title: "The Beginning",
-    body: "Our story began like a quiet song—unexpected yet comforting. We met at just the right time, when life was still figuring itself out. What started as casual conversations turned into deep connections, shared dreams, and a sense of home in each other's presence.",
-  },
-  {
-    title: "Growing Love",
-    body: "As time passed, we grew not just as individuals, but as a team. We've celebrated wins, braved challenges, and found countless reasons to laugh along the way.",
-  },
-  {
-    title: "A Promise for Forever",
-    body: "Now, with joyful hearts and hopeful eyes, we're stepping into the next chapter. This wedding isn't just a celebration of a day—it's a celebration of a journey, a promise, and the love we're lucky enough to call our own.",
-  },
-];
+  chapters: StoryChapter[];
+  backgroundImage: string;
+  /** Karangan bunga atas & bawah - yang atas diputar 180 derajat. */
+  wreathImage: SizedImage;
+};
 
 function ChapterItem({ title, body, index }: StoryChapter & { index: number }) {
   const reveal = useReveal(alternate(index));
@@ -39,8 +29,13 @@ function ChapterItem({ title, body, index }: StoryChapter & { index: number }) {
   );
 }
 
-export default function Story() {
-  const title = useReveal("up");
+export default function Story({
+  title,
+  chapters,
+  backgroundImage,
+  wreathImage,
+}: StoryProps) {
+  const titleReveal = useReveal("up");
 
   return (
     <section
@@ -54,10 +49,10 @@ export default function Story() {
           className="pointer-events-none absolute top-[-12%] left-1/2 z-20 w-[115%] max-w-137.5 -translate-x-1/2 rotate-180 select-none"
         >
           <Image
-            src="/images/sunny_decor1.webp"
+            src={wreathImage.src}
             alt=""
-            width={800}
-            height={340}
+            width={wreathImage.width}
+            height={wreathImage.height}
             sizes="(max-width: 500px) 115vw, 575px"
             className="h-auto w-full"
           />
@@ -67,7 +62,7 @@ export default function Story() {
         <div className="relative w-full overflow-hidden rounded-[999px] shadow-lg">
           <div className="absolute inset-0 -z-10">
             <Image
-              src="/images/cover-bg.jpg"
+              src={backgroundImage}
               alt="Couple photo background"
               fill
               sizes="(max-width: 500px) 100vw, 500px"
@@ -79,13 +74,13 @@ export default function Story() {
           <div className="relative z-10 flex flex-col items-center px-[10%] py-[25%] text-center">
             <motion.p
               className="mb-[8%] font-script text-[10cqw] text-white drop-shadow-md md:text-5xl"
-              {...title}
+              {...titleReveal}
             >
-              Our Love Story
+              {title}
             </motion.p>
 
             <div className="flex flex-col gap-[7%]">
-              {CHAPTERS.map((chapter, index) => (
+              {chapters.map((chapter, index) => (
                 <ChapterItem key={chapter.title} index={index} {...chapter} />
               ))}
             </div>
@@ -98,10 +93,10 @@ export default function Story() {
           className="pointer-events-none absolute bottom-[-12%] left-1/2 z-20 w-[115%] max-w-137.5 -translate-x-1/2 select-none"
         >
           <Image
-            src="/images/sunny_decor1.webp"
+            src={wreathImage.src}
             alt=""
-            width={800}
-            height={340}
+            width={wreathImage.width}
+            height={wreathImage.height}
             sizes="(max-width: 500px) 115vw, 575px"
             className="h-auto w-full"
           />

@@ -6,13 +6,13 @@ import { motion } from "framer-motion";
 import { instagramUrl, safeHref } from "../lib/url";
 import type {
   BrideInfo,
-  ClosingQuoteInfo,
   DressCodeInfo,
   EventDetail,
   GroomInfo,
   OverlayMotion,
+  QuoteInfo,
+  StageAssets,
 } from "./Stage.types";
-import { DEFAULT_DRESS_CODE } from "./Stage.types";
 
 interface StageOverlaysProps extends OverlayMotion {
   groom: GroomInfo;
@@ -20,15 +20,12 @@ interface StageOverlaysProps extends OverlayMotion {
   matrimony: EventDetail;
   reception: EventDetail;
   dressCode: DressCodeInfo;
-  closingQuote: ClosingQuoteInfo;
+  openingQuote: QuoteInfo;
+  closingQuote: QuoteInfo;
   streamingUrl: string;
+  assets: Pick<StageAssets, "quoteCloud" | "eventWash">;
   greatVibesClassName: string;
 }
-
-const OPENING_QUOTE: ClosingQuoteInfo = {
-  text: "So they are no longer two, but one flesh. Therefore what God has joined together, let no one separate.",
-  citation: "Matthew 19:6",
-};
 
 // Every layer here is laid out against the stage's 500px design width, so a
 // full-viewport `sizes` would have the optimizer ship a phone-width image for
@@ -50,10 +47,12 @@ function QuoteOverlay({
   opacity,
   scale,
   quote,
+  cloudSrc,
 }: {
   opacity: OverlayMotion["openingQuoteOpacity"];
   scale?: OverlayMotion["openingQuoteScale"];
-  quote: ClosingQuoteInfo;
+  quote: QuoteInfo;
+  cloudSrc: string;
 }) {
   return (
     <motion.div
@@ -62,7 +61,7 @@ function QuoteOverlay({
     >
       <div className="absolute w-[130%] max-w-250 h-225 translate-y-[2%] opacity-90">
         <Image
-          src="/images/cloud3_80_min.png"
+          src={cloudSrc}
           alt=""
           fill
           sizes={CLOUD_SIZES}
@@ -192,8 +191,10 @@ export default function StageOverlays({
   matrimony,
   reception,
   dressCode,
+  openingQuote,
   closingQuote,
   streamingUrl,
+  assets,
   groomOpacity,
   groomX,
   groomY,
@@ -206,7 +207,6 @@ export default function StageOverlays({
   closingQuoteOpacity,
   greatVibesClassName,
 }: StageOverlaysProps) {
-  const colors = dressCode.colors ?? DEFAULT_DRESS_CODE.colors;
   const streamHref = safeHref(streamingUrl);
 
   return (
@@ -214,7 +214,8 @@ export default function StageOverlays({
       <QuoteOverlay
         opacity={openingQuoteOpacity}
         scale={openingQuoteScale}
-        quote={OPENING_QUOTE}
+        quote={openingQuote}
+        cloudSrc={assets.quoteCloud}
       />
       <PersonOverlay
         person={groom}
@@ -239,7 +240,7 @@ export default function StageOverlays({
         aria-hidden="true"
       >
         <Image
-          src="/images/cloud4_90.webp"
+          src={assets.eventWash}
           alt=""
           fill
           sizes={WASH_SIZES}
@@ -290,13 +291,13 @@ export default function StageOverlays({
         <span
           className={`${greatVibesClassName} block text-[clamp(34px,8.6cqw,46px)] leading-[1.15] text-[#6d574d] select-none`}
         >
-          {dressCode.title || DEFAULT_DRESS_CODE.title}
+          {dressCode.title}
         </span>
         <p className="mt-[2.4cqw] text-[clamp(10px,2.33cqw,12.5px)] text-[#1e1f21] leading-relaxed">
-          {dressCode.description || DEFAULT_DRESS_CODE.description}
+          {dressCode.description}
         </p>
         <div className="mt-[6cqw] flex items-center justify-center">
-          {colors.map((color, index) => (
+          {dressCode.colors.map((color, index) => (
             <span
               key={color.name}
               title={color.name}
@@ -311,7 +312,11 @@ export default function StageOverlays({
           ))}
         </div>
       </motion.div>
-      <QuoteOverlay opacity={closingQuoteOpacity} quote={closingQuote} />
+      <QuoteOverlay
+        opacity={closingQuoteOpacity}
+        quote={closingQuote}
+        cloudSrc={assets.quoteCloud}
+      />
       <div className="absolute bottom-[clamp(12px,2cqw,20px)] inset-x-0 z-50 flex flex-col items-center justify-center text-[#2a2a2a] animate-bounce motion-reduce:animate-none pointer-events-none">
         <ChevronUp className="w-4 h-4 mb-0.5" strokeWidth={2.5} />
         <span className="text-[clamp(10px,2cqw,12px)] font-semibold tracking-tight">
