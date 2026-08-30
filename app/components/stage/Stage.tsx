@@ -20,18 +20,6 @@ const greatVibes = Great_Vibes({
   display: "swap",
 });
 
-export type {
-  BrideInfo,
-  ColorSwatch,
-  DressCodeInfo,
-  EventDetail,
-  GroomInfo,
-  QuoteInfo,
-  StageAssets,
-  StageContent,
-  StageProps,
-} from "./Stage.types";
-
 // The camera's own push-in, and the point it pivots about - both must match
 // StageCamera, since every plane below is solved against them.
 const CAMERA_ZOOM = 2.4;

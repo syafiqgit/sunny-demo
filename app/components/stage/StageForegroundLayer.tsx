@@ -2,7 +2,8 @@
 
 import Image from "next/image";
 import { motion } from "framer-motion";
-import type { PlaneMotion, StageAssets } from "./Stage.types";
+import type { PlaneMotion } from "./Stage.types";
+import type { StageAssets } from "@/app/lib/content";
 
 type StageForegroundLayerProps = Pick<
   PlaneMotion,

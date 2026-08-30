@@ -2,14 +2,14 @@
 
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { safeHref } from "../lib/url";
-import { useReveal } from "./useReveal";
-import type { TemplateConfig } from "../templates/types";
+import { safeHref } from "@/app/lib/url";
+import { useReveal } from "@/app/hooks/useReveal";
+import type { ClosingInfo, GiftInfo } from "@/app/lib/content";
 
 interface ClosingProps {
   coupleNames: string;
-  gift: TemplateConfig["gift"];
-  closing: TemplateConfig["closing"];
+  gift: GiftInfo;
+  closing: ClosingInfo;
 }
 
 export default function Closing({ coupleNames, gift, closing }: ClosingProps) {

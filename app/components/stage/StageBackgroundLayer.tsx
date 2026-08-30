@@ -2,7 +2,8 @@
 
 import Image from "next/image";
 import { motion } from "framer-motion";
-import type { PlaneMotion, SizedImage } from "./Stage.types";
+import type { PlaneMotion } from "./Stage.types";
+import type { SizedImage } from "@/app/lib/content";
 
 type StageBackgroundLayerProps = Pick<PlaneMotion, "canopy"> & {
   asset: SizedImage;

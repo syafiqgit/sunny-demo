@@ -1,0 +1,16 @@
+# Repo ini sempat bercampur LF dan CRLF, sehingga `git diff` memunculkan
+# peringatan "LF will be replaced by CRLF" dan diff terlihat lebih besar dari
+# perubahan sebenarnya. Menyimpan semuanya sebagai LF membuatnya konsisten
+# terlepas dari setelan core.autocrlf di masing-masing mesin.
+* text=auto eol=lf
+
+# Biner - jangan pernah diutak-atik line ending-nya.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.ico binary
+*.mp3 binary
+*.mp4 binary
+*.woff binary
+*.woff2 binary

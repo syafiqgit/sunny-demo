@@ -1,6 +1,7 @@
 "use client";
 
-import type { PlaneMotion, SceneMotion, StageAssets } from "./Stage.types";
+import type { PlaneMotion, SceneMotion } from "./Stage.types";
+import type { StageAssets } from "@/app/lib/content";
 import StageBackgroundLayer from "./StageBackgroundLayer";
 import StageCamera from "./StageCamera";
 import StageCharacterLayer from "./StageCharacterLayer";

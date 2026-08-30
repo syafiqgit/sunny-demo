@@ -11,12 +11,33 @@ import {
   Smartphone,
   Sparkles,
 } from "lucide-react";
-import { TEMPLATES } from "./templates";
+import type { Metadata } from "next";
+import { TEMPLATES } from "@/app/templates";
+import { SITE_DESCRIPTION, SITE_NAME, SITE_TITLE } from "@/app/lib/site";
 
 // Tema unggulan untuk tombol "Lihat Contoh Undangan" di hero. Diambil dari
 // registry, bukan slug yang ditulis tangan, supaya tautannya tidak bisa
 // menunjuk ke tema yang sudah diganti nama.
 const FEATURED = TEMPLATES[0];
+
+// Next mengganti seluruh objek `openGraph` milik layout, bukan menggabung
+// per-field, jadi judul dan deskripsinya diulang di sini - dari konstanta yang
+// sama, supaya tidak bisa berbeda. Yang ditambahkan cuma gambarnya.
+export const metadata: Metadata = {
+  openGraph: {
+    type: "website",
+    siteName: SITE_NAME,
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+    images: [{ url: FEATURED.cardImage }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+    images: [FEATURED.cardImage],
+  },
+};
 
 const FEATURES = [
   {
@@ -279,7 +300,9 @@ export default function Home() {
             <Mail className="size-4" aria-hidden="true" />
             UndanganCuyy
           </span>
-          <span>&copy; {new Date().getFullYear()} UndanganCuyy</span>
+          {/* Tanpa tahun: halaman ini statis, jadi `new Date()` membeku pada
+              waktu build dan akan salah begitu tahun berganti tanpa deploy. */}
+          <span>&copy; UndanganCuyy</span>
         </div>
       </footer>
     </main>

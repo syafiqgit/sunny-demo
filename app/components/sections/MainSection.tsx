@@ -6,7 +6,7 @@ import Countdown from "./Countdown";
 import RsvpWishes from "./RsvpWishes";
 import Gallery from "./Gallery";
 import Closing from "./Closing";
-import type { TemplateConfig } from "../templates/types";
+import type { TemplateConfig } from "@/app/lib/content";
 
 interface MainSectionProps {
   template: TemplateConfig;

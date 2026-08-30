@@ -1,94 +1,12 @@
 import type { MotionValue } from "framer-motion";
-
-export interface PersonInfo {
-  scriptName: string;
-  fullName: string;
-  parentsLine1: string;
-  parentsLine2: string;
-  instagramHandle: string;
-}
-
-export type GroomInfo = PersonInfo;
-export type BrideInfo = PersonInfo;
-
-export interface EventDetail {
-  title: string;
-  date: string;
-  time: string;
-  venue: string;
-  address: string;
-  mapsUrl?: string;
-}
-
-export interface ColorSwatch {
-  name: string;
-  hex: string;
-}
-
-export interface DressCodeInfo {
-  title: string;
-  description: string;
-  colors: ColorSwatch[];
-}
-
-export interface QuoteInfo {
-  text: string;
-  citation?: string;
-}
-
-/** Alias historis - dipakai untuk kutipan pembuka maupun penutup. */
-export type ClosingQuoteInfo = QuoteInfo;
+import type { StageContent } from "@/app/lib/content";
 
 /**
- * Gambar yang dirender tanpa `fill`, jadi ukuran alaminya ikut dibawa supaya
- * next/image bisa memesan ruangnya dan tidak ada layout shift.
- */
-export interface SizedImage {
-  src: string;
-  width: number;
-  height: number;
-}
-
-/**
- * Artwork panggung, jauh ke dekat.
+ * Tipe gerak panggung - murni urusan presentasi.
  *
- * PENTING untuk tema baru: hanya `src` (dan ukuran alaminya) yang tinggal
- * diganti. Transform yang memasang tiap lapis pada tempatnya - skala, geseran,
- * dan tinggi minimumnya - hidup di komponen lapisannya masing-masing dan
- * diukur terhadap komposisi artwork "sunny". Artwork baru harus digambar pada
- * spesifikasi yang sama (lebar desain 500px, ditambatkan ke tepi bawah
- * panggung, horizon dan garis bunga pada ketinggian yang sama) atau angka-
- * angka itu perlu diukur ulang. Lihat catatan di tiap komponen Stage*Layer.
+ * Kontrak isinya (siapa yang menikah, acara apa, aset mana) ada di
+ * `lib/content.ts`; berkas ini hanya menyusunnya jadi props komponen.
  */
-export interface StageAssets {
-  /** Langit + tajuk pohon - bidang terjauh. */
-  canopy: SizedImage;
-  /** Hamparan bunga tempat pasangan berdiri. */
-  field: SizedImage;
-  /** Rumpun bunga tengah, digambar di depan pasangan. */
-  nearGrass: SizedImage;
-  /** Rumpun bunga terdepan. */
-  frontGrass: SizedImage;
-  /** Potongan gambar pasangan. */
-  couple: SizedImage;
-  /** Awan di belakang kutipan pembuka (dirender dengan `fill`). */
-  quoteCloud: string;
-  /** Sapuan kabut di balik detail acara (dirender dengan `fill`). */
-  eventWash: string;
-}
-
-/** Seluruh isi panggung untuk satu tema. */
-export interface StageContent {
-  groom: GroomInfo;
-  bride: BrideInfo;
-  matrimony: EventDetail;
-  reception: EventDetail;
-  dressCode: DressCodeInfo;
-  openingQuote: QuoteInfo;
-  closingQuote: QuoteInfo;
-  streamingUrl?: string;
-  assets: StageAssets;
-}
 
 export interface StageProps extends StageContent {
   revealProgress?: number;

@@ -2,9 +2,8 @@
 
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { alternate, useReveal } from "./useReveal";
-import type { SizedImage } from "./Stage.types";
-import type { StoryChapter } from "../templates/types";
+import { alternate, useReveal } from "@/app/hooks/useReveal";
+import type { SizedImage, StoryChapter } from "@/app/lib/content";
 
 type StoryProps = {
   title: string;

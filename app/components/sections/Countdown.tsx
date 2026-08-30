@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { useReveal } from "./useReveal";
-import type { SizedImage } from "./Stage.types";
+import { useReveal } from "@/app/hooks/useReveal";
+import type { SizedImage } from "@/app/lib/content";
 
 interface CountdownProps {
   /** Sasaran hitung mundur, ISO 8601 dengan zona waktu. */

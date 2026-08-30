@@ -3,20 +3,19 @@
 import Image from "next/image";
 import { Camera, ChevronUp } from "lucide-react";
 import { motion } from "framer-motion";
-import { instagramUrl, safeHref } from "../lib/url";
+import { instagramUrl, safeHref } from "@/app/lib/url";
+import type { OverlayMotion } from "./Stage.types";
 import type {
-  BrideInfo,
   DressCodeInfo,
   EventDetail,
-  GroomInfo,
-  OverlayMotion,
+  PersonInfo,
   QuoteInfo,
   StageAssets,
-} from "./Stage.types";
+} from "@/app/lib/content";
 
 interface StageOverlaysProps extends OverlayMotion {
-  groom: GroomInfo;
-  bride: BrideInfo;
+  groom: PersonInfo;
+  bride: PersonInfo;
   matrimony: EventDetail;
   reception: EventDetail;
   dressCode: DressCodeInfo;
@@ -93,7 +92,7 @@ function PersonOverlay({
   y,
   greatVibesClassName,
 }: {
-  person: GroomInfo | BrideInfo;
+  person: PersonInfo;
   relation: string;
   opacity: OverlayMotion["groomOpacity"];
   x: OverlayMotion["groomX"];

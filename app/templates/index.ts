@@ -1,5 +1,5 @@
 import { sunny } from "./sunny";
-import type { TemplateConfig } from "./types";
+import type { TemplateConfig } from "@/app/lib/content";
 
 /**
  * Daftar tema. Urutannya = urutan kartu di landing page.

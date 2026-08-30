@@ -2,8 +2,8 @@
 
 import { useCallback, useState, useSyncExternalStore } from "react";
 import { motion } from "framer-motion";
-import { useReveal } from "./useReveal";
-import type { SeedWish } from "../templates/types";
+import { useReveal } from "@/app/hooks/useReveal";
+import type { SeedWish } from "@/app/lib/content";
 
 interface RsvpWishesProps {
   /** Ucapan bawaan dari tema; dipakai sampai backend RSVP tersedia. */

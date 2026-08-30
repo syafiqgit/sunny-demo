@@ -1,22 +1,58 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import CoverPage from "./CoverPage";
-import MainSection from "./MainSection";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import MusicToggle, { type MusicToggleHandle } from "./MusicToggle";
-import Stage from "./Stage";
-import { useChapterScroll } from "./useChapterScroll";
-import type { TemplateConfig } from "../templates/types";
+import CoverPage from "@/app/components/sections/CoverPage";
+import MainSection from "@/app/components/sections/MainSection";
+import Stage from "@/app/components/stage/Stage";
+import { useChapterScroll } from "@/app/hooks/useChapterScroll";
+import type { TemplateConfig } from "@/app/lib/content";
 
 interface InvitationProps {
-  /** Seluruh isi tema. Lihat app/templates/types.ts. */
+  /** Seluruh isi tema. Lihat app/lib/content.ts. */
   template: TemplateConfig;
-  /** Nama tamu di sampul; nanti bisa datang dari query string. */
-  guestName?: string;
 }
 
 const SECTION_COUNT = 8;
 const LOADING_DURATION_MS = 2000;
+
+// Nama tamu datang dari query string (?to=Budi), dibaca di sisi klien.
+//
+// Bukan lewat `searchParams` di server: itu membuat route-nya dinamis dan
+// membatalkan prerender. Bukan pula setState di dalam effect - store di bawah
+// tidak pernah memancarkan perubahan, jadi React merender snapshot server
+// (undefined) ke HTML lalu merender ulang dengan snapshot klien begitu
+// hydration selesai. Persis satu transisi, dan itu masih tertutup layar
+// loading 2 detik sehingga pergantiannya tidak terlihat. Pola yang sama
+// dipakai RsvpWishes untuk membaca jam pembaca.
+const GUEST_PARAM = "to";
+const GUEST_NAME_MAX = 60;
+
+// Snapshot harus stabil antar-render, jadi hasilnya di-cache dan hanya dihitung
+// ulang kalau query string-nya benar-benar berubah (navigasi antar-undangan di
+// sisi klien).
+let cachedSearch: string | null = null;
+let cachedGuestName: string | undefined;
+
+const subscribeNever = () => () => {};
+
+function getGuestName(): string | undefined {
+  const search = window.location.search;
+  if (search !== cachedSearch) {
+    cachedSearch = search;
+    const raw = new URLSearchParams(search).get(GUEST_PARAM);
+    cachedGuestName = raw?.trim().slice(0, GUEST_NAME_MAX) || undefined;
+  }
+  return cachedGuestName;
+}
+
+const getServerGuestName = () => undefined;
 
 // Each entry is the stageRevealProgress value for that beat of the story -
 // groom; bride; the empty-grass event framing; dress code; closing quote -
@@ -81,8 +117,13 @@ function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
 }
 
-export default function Invitation({ template, guestName }: InvitationProps) {
+export default function Invitation({ template }: InvitationProps) {
   const [isLoading, setIsLoading] = useState(true);
+  const guestName = useSyncExternalStore(
+    subscribeNever,
+    getGuestName,
+    getServerGuestName,
+  );
   const [hasOpened, setHasOpened] = useState(false);
   const [stageChapter, setStageChapter] = useState(0);
   // The scroll position itself is never on screen - only these two thresholds

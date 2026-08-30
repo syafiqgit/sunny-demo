@@ -1,4 +1,4 @@
-import type { TemplateConfig } from "./types";
+import type { TemplateConfig } from "@/app/lib/content";
 
 /**
  * Tema "Sunny" - ladang bunga, panggung parallax, palet hangat.

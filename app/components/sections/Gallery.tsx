@@ -2,8 +2,8 @@
 
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { alternate, useReveal, type RevealFrom } from "./useReveal";
-import type { GalleryPhoto } from "../templates/types";
+import { alternate, useReveal, type RevealFrom } from "@/app/hooks/useReveal";
+import type { GalleryPhoto } from "@/app/lib/content";
 
 interface GalleryProps {
   photos: GalleryPhoto[];

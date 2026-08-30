@@ -1,5 +1,11 @@
 import type { Metadata, Viewport } from "next";
 import { Poppins, Alex_Brush } from "next/font/google";
+import {
+  SITE_DESCRIPTION,
+  SITE_NAME,
+  SITE_TITLE,
+  SITE_URL,
+} from "@/app/lib/site";
 import "./globals.css";
 
 const sansFont = Poppins({
@@ -17,10 +23,25 @@ const scriptFont = Alex_Brush({
   display: "swap",
 });
 
+// Seluruh produk ini dipakai dengan cara membagikan tautan, jadi kartu preview
+// di WhatsApp/Instagram adalah tampilan pertama yang dilihat tamu. `openGraph`
+// di bawah yang mengisinya, dan `metadataBase` yang membuat path gambar
+// relatif berubah jadi URL absolut - tanpa itu kartunya kosong.
 export const metadata: Metadata = {
-  title: "UndanganCuyy - Undangan Pernikahan Digital",
-  description:
-    "Pilih template undangan pernikahan digital yang elegan, bisa dibuka di ponsel mana saja, lengkap dengan musik, galeri, dan RSVP.",
+  metadataBase: new URL(SITE_URL),
+  title: SITE_TITLE,
+  description: SITE_DESCRIPTION,
+  openGraph: {
+    type: "website",
+    siteName: SITE_NAME,
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+  },
 };
 
 // `viewportFit: "cover"` is what makes the env(safe-area-inset-*) padding on
