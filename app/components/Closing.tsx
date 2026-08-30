@@ -1,17 +1,26 @@
 "use client";
 
 import Image from "next/image";
+import { motion } from "framer-motion";
+import { useReveal } from "./useReveal";
 
 const GIFT_URL = "#"; // GANTI ke link rekening/e-wallet/wishlist kado
 const COUPLE_NAMES = "Vincent & Natasha";
 
 export default function Closing() {
+  const gift = useReveal("left");
+  const portrait = useReveal("right");
+  const farewell = useReveal("up");
+
   return (
     <section
       aria-label="Wedding gift and closing message"
       className="relative flex w-full min-h-dvh flex-col items-center justify-center px-[6cqw] py-[15%] @container"
     >
-      <div className="mb-[15%] flex w-full max-w-[420px] items-center gap-[5%]">
+      <motion.div
+        className="mb-[15%] flex w-full max-w-[420px] items-center gap-[5%]"
+        {...gift}
+      >
         <div
           aria-hidden="true"
           className="relative aspect-[3/4] w-[35%] select-none"
@@ -45,9 +54,12 @@ export default function Closing() {
             SEND GIFT
           </a>
         </div>
-      </div>
+      </motion.div>
 
-      <div className="relative mb-[12%] aspect-[1/1.4] w-[70cqw] max-w-[340px]">
+      <motion.div
+        className="relative mb-[12%] aspect-[1/1.4] w-[70cqw] max-w-[340px]"
+        {...portrait}
+      >
         <div className="absolute inset-0 overflow-hidden rounded-[999px] border-[2px] border-white shadow-md md:border-[3px]">
           <Image
             src="/images/cover-bg.jpg"
@@ -69,9 +81,12 @@ export default function Closing() {
             Natasha
           </span>
         </div>
-      </div>
+      </motion.div>
 
-      <div className="mt-auto flex w-full max-w-[480px] flex-col items-center">
+      <motion.div
+        className="mt-auto flex w-full max-w-[480px] flex-col items-center"
+        {...farewell}
+      >
         <p className="px-[4%] text-center text-[3.2cqw] font-medium leading-relaxed text-[#2a2a2a] md:text-[13px]">
           We cannot wait to share this special moment with you. Your presence
           will make our day even more meaningful.
@@ -83,7 +98,7 @@ export default function Closing() {
         >
           Swipe up
         </span>
-      </div>
+      </motion.div>
     </section>
   );
 }

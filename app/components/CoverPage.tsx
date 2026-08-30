@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, memo } from "react";
 import Image from "next/image";
 import { Mail, ChevronDown } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
@@ -15,7 +15,7 @@ const COUPLE_NAMES = "Vincent & Natasha";
 const WEDDING_DATE = "Saturday, April 25, 2026";
 const DEFAULT_GUEST_NAME = "Guest";
 
-export default function CoverPage({
+function CoverPage({
   onOpen,
   hasOpened = false,
   guestName = DEFAULT_GUEST_NAME,
@@ -128,3 +128,8 @@ export default function CoverPage({
     </section>
   );
 }
+
+// Memoised: the page re-renders on every scroll frame to drive the cover
+// fade, and without this that reconciles this whole subtree each time - which
+// is what put 60-100ms frames in the middle of the hand-off.
+export default memo(CoverPage);

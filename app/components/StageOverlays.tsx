@@ -1,14 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import {
-  Camera,
-  ChevronUp,
-  MapPin,
-  Shirt,
-  Sparkles,
-  Video,
-} from "lucide-react";
+import { Camera, ChevronUp } from "lucide-react";
 import { motion } from "framer-motion";
 import type {
   BrideInfo,
@@ -33,13 +26,13 @@ interface StageOverlaysProps extends OverlayMotion {
 
 function QuoteOverlay({
   opacity,
-  y,
+  scale,
   text,
   citation,
   opening = false,
 }: {
   opacity: OverlayMotion["openingQuoteOpacity"];
-  y?: OverlayMotion["closingQuoteY"];
+  scale?: OverlayMotion["openingQuoteScale"];
   text: string;
   citation?: string;
   opening?: boolean;
@@ -47,7 +40,7 @@ function QuoteOverlay({
   return (
     <motion.div
       className="absolute top-[8%] inset-x-0 z-50 flex items-center justify-center pointer-events-none"
-      style={{ opacity, ...(y ? { y } : {}) }}
+      style={{ opacity, ...(scale ? { scale } : {}) }}
     >
       <div className="absolute w-[130%] max-w-250 h-225 translate-y-[2%] opacity-90">
         <Image
@@ -126,7 +119,14 @@ function PersonOverlay({
   );
 }
 
-function EventCard({
+/**
+ * One event's details, set straight onto the cloud wash rather than into a
+ * card. Every measurement here was read off the reference frame of this beat
+ * and scaled from its 643px width to the stage's 500px design width: the type
+ * sizes, the 8.5cqw side margin, the tighter gap under each heading and the
+ * wider one before the venue line, and the button's own box.
+ */
+function EventDetailBlock({
   event,
   align = "left",
   greatVibesClassName,
@@ -135,40 +135,36 @@ function EventCard({
   align?: "left" | "right";
   greatVibesClassName: string;
 }) {
+  const right = align === "right";
   return (
     <div
-      className={`relative z-10 w-full max-w-77.5 ${align === "left" ? "self-start" : "self-end"} rounded-2xl bg-white/75 p-4.5 sm:p-5 backdrop-blur-md border border-white/60 shadow-xs transition-all ${align === "right" ? "text-right" : ""}`}
+      className={`flex flex-col ${right ? "items-end text-right" : "items-start text-left"}`}
     >
       <span
-        className={`${greatVibesClassName} block text-[clamp(34px,8cqw,44px)] leading-none text-[#6d574d] select-none mb-1`}
+        className={`${greatVibesClassName} block text-[clamp(29px,7.5cqw,40px)] leading-[1.15] text-[#6d574d] select-none`}
       >
         {event.title}
       </span>
-      <div className="space-y-0.5 text-[#2a2a2a]">
-        <p className="text-[clamp(12px,2.8cqw,14px)] font-bold tracking-tight">
-          {event.date}
-        </p>
-        <p className="text-[clamp(11px,2.4cqw,13px)] font-medium text-[#4a4a4a]">
-          {event.time}
-        </p>
-      </div>
-      <div className="pt-2 mt-2 border-t border-[#6d574d]/15">
-        <p className="text-[clamp(12px,2.6cqw,13.5px)] font-bold text-[#2a2a2a]">
-          {event.venue}
-        </p>
-        <p className="text-[clamp(10.5px,2.3cqw,12px)] text-[#555555] leading-snug mt-0.5">
-          {event.address}
-        </p>
-      </div>
+      <p className="mt-[0.7cqw] text-[clamp(10px,2.33cqw,12.5px)] font-bold text-[#1e1f21] tracking-tight">
+        {event.date}
+      </p>
+      <p className="mt-[0.5cqw] text-[clamp(10px,2.4cqw,12.5px)] text-[#33373a]">
+        {event.time}
+      </p>
+      <p className="mt-[1.9cqw] text-[clamp(9.5px,2.16cqw,11.5px)] font-bold text-[#1e1f21]">
+        {event.venue}
+      </p>
+      <p className="mt-[0.5cqw] text-[clamp(9px,2.07cqw,11px)] text-[#33373a] leading-snug">
+        {event.address}
+      </p>
       {event.mapsUrl && (
         <a
           href={event.mapsUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="pointer-events-auto mt-3 inline-flex items-center gap-1.5 rounded-lg bg-[#6d574d] px-3.5 py-1.5 text-[clamp(11px,2.2cqw,12px)] font-medium text-white shadow-xs transition-colors hover:bg-[#5a473e] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6d574d]"
+          className="pointer-events-auto mt-[2.2cqw] inline-flex items-center rounded-md bg-[#6d574d] px-[2.7cqw] py-[1.75cqw] text-[clamp(9px,2.07cqw,11px)] font-medium text-[#f4f3f1] shadow-xs transition-colors hover:bg-[#5a473e] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6d574d]"
         >
-          <MapPin className="w-3.5 h-3.5 stroke-[2.2]" />
-          <span>Google Maps</span>
+          Google Maps
         </a>
       )}
     </div>
@@ -177,6 +173,8 @@ function EventCard({
 
 export default function StageOverlays({
   openingQuoteOpacity,
+  openingQuoteScale,
+  washOpacity,
   groom,
   bride,
   matrimony,
@@ -194,7 +192,6 @@ export default function StageOverlays({
   dressCodeOpacity,
   dressCodeY,
   closingQuoteOpacity,
-  closingQuoteY,
   greatVibesClassName,
 }: StageOverlaysProps) {
   const colors = dressCode.colors || DEFAULT_DRESS_CODE.colors!;
@@ -203,6 +200,7 @@ export default function StageOverlays({
     <>
       <QuoteOverlay
         opacity={openingQuoteOpacity}
+        scale={openingQuoteScale}
         text=""
         citation="Matthew 19:6"
         opening
@@ -222,21 +220,40 @@ export default function StageOverlays({
         x={brideX}
         greatVibesClassName={greatVibesClassName}
       />
+      {/* The event beat's own backdrop. It carries only the opacity, not the
+          block's slide, so the wash sits still while the text rides in. */}
       <motion.div
-        className="absolute inset-x-0 top-[4%] bottom-[7%] z-50 flex flex-col justify-between px-4 sm:px-8 pointer-events-none"
+        className="absolute inset-x-[-30%] top-[-10%] bottom-[10%] z-50 pointer-events-none"
+        style={{ opacity: washOpacity }}
+        aria-hidden="true"
+      >
+        <Image
+          src="/images/cloud4_90.webp"
+          alt=""
+          fill
+          sizes="160vw"
+          quality={90}
+          className="object-cover object-center"
+        />
+      </motion.div>
+      {/* Bands read off the reference frame: the headings start 11.6% down and
+          the last button ends 17.3% up, with justify-between reproducing its
+          two near-equal gaps on its own. */}
+      <motion.div
+        className="absolute inset-x-0 top-[11.6%] bottom-[17.3%] z-50 flex flex-col justify-between px-[8.5cqw] pointer-events-none"
         style={{ opacity: eventOpacity, y: eventY }}
       >
-        <EventCard
+        <EventDetailBlock
           event={matrimony}
           greatVibesClassName={greatVibesClassName}
         />
-        <EventCard
+        <EventDetailBlock
           event={reception}
           align="right"
           greatVibesClassName={greatVibesClassName}
         />
-        <div className="relative z-10 w-full max-w-[320px] mx-auto rounded-xl bg-white/80 p-3.5 backdrop-blur-md border border-white/60 shadow-xs text-center">
-          <p className="text-[clamp(10.5px,2.3cqw,12px)] text-[#333333] font-medium leading-snug">
+        <div className="flex flex-col items-center text-center">
+          <p className="text-[clamp(9px,2.07cqw,11px)] text-[#2a2a28] leading-relaxed px-[1cqw]">
             For guests who are unable to attend, you can watch the event through
             the link below.
           </p>
@@ -244,60 +261,46 @@ export default function StageOverlays({
             href={streamingUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="pointer-events-auto mt-2 inline-flex items-center gap-1.5 rounded-lg bg-[#6d574d] px-4 py-1.5 text-[clamp(11px,2.2cqw,12px)] font-medium text-white shadow-xs transition-colors hover:bg-[#5a473e] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6d574d]"
+            className="pointer-events-auto mt-[2.6cqw] inline-flex items-center rounded-md bg-[#6d574d] px-[2.7cqw] py-[1.75cqw] text-[clamp(9px,2.07cqw,11px)] font-medium text-[#f4f3f1] shadow-xs transition-colors hover:bg-[#5a473e] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6d574d]"
           >
-            <Video className="w-3.5 h-3.5 stroke-[2.2]" />
-            <span>Live Streaming</span>
+            Live Streaming
           </a>
         </div>
       </motion.div>
+      {/* The dress code shares the event beat's framing exactly - same camera,
+          same wash - so only the two overlays cross-fade. Proportions are the
+          reference's, scaled from its 652px frame to the 500px design width:
+          the pair of swatches is 9.5cqw across and overlaps by 0.9cqw. */}
       <motion.div
-        className="absolute inset-x-0 top-[12%] bottom-[12%] z-50 flex items-center justify-center px-4 sm:px-6 pointer-events-none"
+        className="absolute inset-0 z-50 flex flex-col items-center justify-center px-[8.5cqw] text-center pointer-events-none"
         style={{ opacity: dressCodeOpacity, y: dressCodeY }}
       >
-        <div className="w-full max-w-90 rounded-2xl bg-white/80 p-6 sm:p-7 backdrop-blur-md border border-white/70 shadow-md text-center flex flex-col items-center">
-          <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-[#6d574d]/10 text-[#6d574d] mb-2">
-            <Shirt className="w-5 h-5 stroke-2" />
-          </div>
-          <span
-            className={`${greatVibesClassName} block text-[clamp(38px,9cqw,48px)] leading-none text-[#6d574d] select-none`}
-          >
-            {dressCode.title || DEFAULT_DRESS_CODE.title}
-          </span>
-          <p className="mt-1 text-[clamp(11px,2.4cqw,13px)] font-bold text-[#6d574d] tracking-wider uppercase">
-            {dressCode.subtitle || DEFAULT_DRESS_CODE.subtitle}
-          </p>
-          <p className="mt-3 text-[clamp(11px,2.3cqw,12.5px)] text-[#4a4a4a] leading-relaxed">
-            {dressCode.description || DEFAULT_DRESS_CODE.description}
-          </p>
-          <div className="mt-5 grid grid-cols-4 gap-3 w-full">
-            {colors.map((color) => (
-              <div
-                key={color.name}
-                className="flex flex-col items-center gap-1.5 group"
-              >
-                <div
-                  className="w-9 h-9 sm:w-10 sm:h-10 rounded-full border border-black/10 shadow-xs transition-transform group-hover:scale-105"
-                  style={{ backgroundColor: color.hex }}
-                  aria-hidden="true"
-                />
-                <span className="text-[10px] sm:text-[11px] font-medium text-[#333333] leading-tight">
-                  {color.name}
-                </span>
-              </div>
-            ))}
-          </div>
-          <div className="mt-6 pt-3.5 border-t border-[#6d574d]/15 w-full flex items-center justify-center gap-1.5 text-[#6d574d]">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span className="text-[clamp(11px,2.3cqw,12.5px)] font-semibold">
-              {dressCode.note || DEFAULT_DRESS_CODE.note}
-            </span>
-          </div>
+        <span
+          className={`${greatVibesClassName} block text-[clamp(34px,8.6cqw,46px)] leading-[1.15] text-[#6d574d] select-none`}
+        >
+          {dressCode.title || DEFAULT_DRESS_CODE.title}
+        </span>
+        <p className="mt-[2.4cqw] text-[clamp(10px,2.33cqw,12.5px)] text-[#1e1f21] leading-relaxed">
+          {dressCode.description || DEFAULT_DRESS_CODE.description}
+        </p>
+        <div className="mt-[6cqw] flex items-center justify-center">
+          {colors.map((color, i) => (
+            <span
+              key={color.name}
+              title={color.name}
+              className="w-[9.5cqw] h-[9.5cqw] rounded-full shadow-[0_1px_3px_rgba(0,0,0,0.08)]"
+              style={{
+                backgroundColor: color.hex,
+                // Each swatch laps over the one before it, as in the reference.
+                marginLeft: i === 0 ? undefined : "-0.9cqw",
+              }}
+              aria-hidden="true"
+            />
+          ))}
         </div>
       </motion.div>
       <QuoteOverlay
         opacity={closingQuoteOpacity}
-        y={closingQuoteY}
         text={closingQuote.text}
         citation={closingQuote.citation}
       />

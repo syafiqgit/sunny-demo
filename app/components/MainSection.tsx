@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, memo } from "react";
 import Story from "./Story";
 import Countdown from "./Countdown";
 import RsvpWishes from "./RsvpWishes";
@@ -11,7 +11,7 @@ interface MainSectionProps {
   onBackToStage: () => void;
 }
 
-export default function MainSection({ onBackToStage }: MainSectionProps) {
+function MainSection({ onBackToStage }: MainSectionProps) {
   const sectionRef = useRef<HTMLDivElement>(null);
 
   const touchStartYRef = useRef(0);
@@ -141,3 +141,8 @@ export default function MainSection({ onBackToStage }: MainSectionProps) {
     </div>
   );
 }
+
+// Memoised: the page re-renders on every scroll frame to drive the cover
+// fade, and without this that reconciles this whole subtree each time - which
+// is what put 60-100ms frames in the middle of the hand-off.
+export default memo(MainSection);

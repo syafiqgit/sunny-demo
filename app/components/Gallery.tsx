@@ -1,6 +1,8 @@
 "use client";
 
 import Image from "next/image";
+import { motion } from "framer-motion";
+import { alternate, useReveal, type RevealFrom } from "./useReveal";
 
 interface GalleryPhoto {
   src: string;
@@ -41,12 +43,16 @@ function GalleryImage({
   alt,
   aspect,
   priority,
-}: GalleryPhoto & { priority?: boolean }) {
+  from = "up",
+}: GalleryPhoto & { priority?: boolean; from?: RevealFrom }) {
+  const reveal = useReveal(from);
+
   return (
-    <div
+    <motion.div
       className={`relative w-full ${
         aspect === "landscape" ? "aspect-3/2" : "aspect-3/4"
       }`}
+      {...reveal}
     >
       <Image
         src={src}
@@ -57,32 +63,36 @@ function GalleryImage({
         sizes="(max-width: 500px) 45vw, 250px"
         className="object-cover"
       />
-    </div>
+    </motion.div>
   );
 }
 
 export default function Gallery() {
   const [top, left, right, ...rest] = PHOTOS;
+  const heading = useReveal("up");
 
   return (
     <section
       aria-label="Our moments gallery"
       className="relative flex w-full flex-col items-center justify-center py-[15%] @container"
     >
-      <h2 className="mb-[8%] text-center font-script text-[12cqw] text-[#1a1a1a] drop-shadow-sm md:text-5xl">
+      <motion.h2
+        className="mb-[8%] text-center font-script text-[12cqw] text-[#1a1a1a] drop-shadow-sm md:text-5xl"
+        {...heading}
+      >
         Our Moments
-      </h2>
+      </motion.h2>
 
       <div className="flex w-[90%] max-w-125 flex-col gap-0.5">
         <GalleryImage {...top} priority />
 
         <div className="grid w-full grid-cols-2 gap-0.5">
-          <GalleryImage {...left} />
-          <GalleryImage {...right} />
+          <GalleryImage {...left} from="left" />
+          <GalleryImage {...right} from="right" />
         </div>
 
-        {rest.map((photo) => (
-          <GalleryImage key={photo.src} {...photo} />
+        {rest.map((photo, index) => (
+          <GalleryImage key={photo.src} from={alternate(index)} {...photo} />
         ))}
       </div>
     </section>

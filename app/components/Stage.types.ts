@@ -32,10 +32,8 @@ export interface ColorSwatch {
 
 export interface DressCodeInfo {
   title?: string;
-  subtitle?: string;
   description?: string;
   colors?: ColorSwatch[];
-  note?: string;
 }
 
 export interface ClosingQuoteInfo {
@@ -61,8 +59,35 @@ export interface SceneMotion {
   scrimOpacity: MotionValue<number>;
 }
 
+/**
+ * One dolly plane's transform. The scale is what separates the planes; the
+ * vertical shift is what lands each one on its mark once the camera has
+ * pushed in - a scale alone drags a bottom-anchored layer straight out of
+ * frame, which is how the flower bands used to vanish at the person holds.
+ */
+export interface PlaneTransform {
+  scale: MotionValue<number>;
+  y: MotionValue<string>;
+}
+
+/**
+ * The dolly-zoom planes, far to near. Each is applied *inside* the camera, so
+ * a plane's on-screen size is (camera scale x plane scale). The canopy also
+ * carries its own pan: a plane that barely grows can no longer afford to
+ * slide the full width the camera does - see Stage.tsx.
+ */
+export interface PlaneMotion {
+  canopy: PlaneTransform & { x: MotionValue<string> };
+  field: PlaneTransform;
+  couple: PlaneTransform & { opacity: MotionValue<number> };
+  nearGrass: PlaneTransform;
+  frontGrass: PlaneTransform;
+}
+
 export interface OverlayMotion {
   openingQuoteOpacity: MotionValue<number>;
+  openingQuoteScale: MotionValue<number>;
+  washOpacity: MotionValue<number>;
   groomOpacity: MotionValue<number>;
   groomX: MotionValue<string>;
   groomY: MotionValue<number>;
@@ -73,7 +98,6 @@ export interface OverlayMotion {
   dressCodeOpacity: MotionValue<number>;
   dressCodeY: MotionValue<number>;
   closingQuoteOpacity: MotionValue<number>;
-  closingQuoteY: MotionValue<number>;
 }
 
 export const DEFAULT_GROOM: GroomInfo = {
@@ -111,17 +135,15 @@ export const DEFAULT_RECEPTION: EventDetail = {
 };
 
 export const DEFAULT_DRESS_CODE: DressCodeInfo = {
-  title: "Dress Code",
-  subtitle: "Attire Palette",
+  title: "Dresscode",
   description:
-    "We kindly request our honored guests to wear attire following our event color palette:",
+    "We would love for our guests to wear these colors on our special day.",
+  // Read off the reference; the swatches carry no visible labels, so the
+  // names only key the list.
   colors: [
-    { name: "Sage Green", hex: "#8A9A86" },
-    { name: "Cream", hex: "#F4EBE1" },
-    { name: "Terracotta", hex: "#C87D55" },
-    { name: "Warm Earth", hex: "#6D574D" },
+    { name: "Warm Sand", hex: "#A98D76" },
+    { name: "White", hex: "#FFFFFF" },
   ],
-  note: "Formal / Semi-Formal Attire",
 };
 
 export const DEFAULT_CLOSING_QUOTE: ClosingQuoteInfo = {

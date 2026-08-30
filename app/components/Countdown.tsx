@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import { motion } from "framer-motion";
+import { useReveal } from "./useReveal";
 
 const WEDDING_DATE = new Date("2027-01-01T00:00:00+07:00"); // GANTI ke tanggal asli
 
@@ -58,15 +60,24 @@ export default function Countdown() {
     { label: "Seconds", value: time.seconds },
   ];
 
+  // The first thing the reader sees once MainSection arrives, so these lead
+  // the sequence: the clock, then the button a beat later, then the RSVP
+  // tease leaning in from the side it is set against.
+  const bloom = useReveal("right");
+  const clock = useReveal("up");
+  const saveTheDate = useReveal("up", 0.12);
+  const rsvpTease = useReveal("left", 0.06);
+
   return (
     <section
       aria-label="Wedding countdown and RSVP"
       className="relative w-full h-dvh overflow-hidden @container"
     >
       {/* Bunga dekoratif */}
-      <div
+      <motion.div
         aria-hidden="true"
         className="pointer-events-none absolute left-96 md:top-25 top-52 md:w-[58cqw] md:max-w-62.5 w-[85cqw] max-w-92.5 z-10 rotate-[-22deg] origin-bottom-right select-none"
+        {...bloom}
       >
         <Image
           src="/images/sunny_decor2.webp" // GANTI ke path asset bunga kamu
@@ -76,13 +87,14 @@ export default function Countdown() {
           priority={false}
           className="w-full h-auto"
         />
-      </div>
+      </motion.div>
 
       <div className="relative z-20 flex flex-col items-center h-full px-[6cqw]">
         {/* Countdown */}
-        <div
+        <motion.div
           className="flex items-start gap-[4cqw] mt-[10%]"
           role="timer"
+          {...clock}
           aria-live="polite"
           aria-atomic="true"
         >
@@ -106,7 +118,7 @@ export default function Countdown() {
               )}
             </div>
           ))}
-        </div>
+        </motion.div>
 
         {isOver && (
           <p className="mt-[3%] text-[3cqw] md:text-sm text-[#7a5c48] font-medium">
@@ -114,15 +126,19 @@ export default function Countdown() {
           </p>
         )}
 
-        <button
+        <motion.button
           type="button"
+          {...saveTheDate}
           className="pointer-events-auto mt-[6%] px-[7cqw] py-[3cqw] rounded-full bg-[#7a5c48] text-white text-[3cqw] md:text-sm font-semibold tracking-wide shadow-md transition-colors hover:bg-[#6a4e3c] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7a5c48] active:scale-[0.98]"
         >
           Save the Date
-        </button>
+        </motion.button>
 
         {/* RSVP */}
-        <div className="mt-auto mb-[18%] w-full flex flex-col items-start">
+        <motion.div
+          className="mt-auto mb-[18%] w-full flex flex-col items-start"
+          {...rsvpTease}
+        >
           <p className="font-script text-[15cqw] md:text-5xl text-[#2a2a2a] leading-none">
             Rsvp
           </p>
@@ -136,7 +152,7 @@ export default function Countdown() {
             Tell us you&apos;re coming and leave a few words—we&apos;d love to
             hear from you!
           </p>
-        </div>
+        </motion.div>
       </div>
     </section>
   );

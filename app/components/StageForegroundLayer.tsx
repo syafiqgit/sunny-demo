@@ -1,4 +1,13 @@
+"use client";
+
 import Image from "next/image";
+import { motion } from "framer-motion";
+import type { PlaneMotion } from "./Stage.types";
+
+type StageForegroundLayerProps = Pick<
+  PlaneMotion,
+  "field" | "nearGrass" | "frontGrass"
+>;
 
 /**
  * The three flower bands, back to front: the mid field the couple stands in,
@@ -9,45 +18,89 @@ import Image from "next/image";
  * scales and the sideways nudges are the reference template's own computed
  * values. The translateX sits inside scale() so it scales with the layer,
  * matching how the reference composes its matrix.
+ *
+ * Each band then rides its own dolly plane. They grow faster than the canopy
+ * and, because the push-in throws everything below the camera's origin
+ * downward, each also carries a shift that pulls it back up the frame - that
+ * is what keeps the two front bands in front of the couple, crossing them
+ * above the knee, instead of sinking out of shot as the camera arrives.
  */
-export default function StageForegroundLayer() {
+export default function StageForegroundLayer({
+  field,
+  nearGrass,
+  frontGrass,
+}: StageForegroundLayerProps) {
   return (
     <>
-      <Image
-        src="/images/sunny_bg1_ext.webp"
-        alt=""
-        width={1500}
-        height={708}
-        sizes="1150px"
-        quality={95}
+      <motion.div
+        className="absolute inset-0 z-10 pointer-events-none"
+        style={{
+          scale: field.scale,
+          y: field.y,
+          transformOrigin: "50% 48%",
+        }}
         aria-hidden="true"
-        className="absolute bottom-0 left-1/2 z-10 w-[500px] max-w-none ml-[-250px] h-auto pointer-events-none"
-        style={{ transform: "translateY(8.03px) scale(1.36293)" }}
-      />
+      >
+        <Image
+          src="/images/sunny_bg1_ext.webp"
+          alt=""
+          width={1500}
+          height={708}
+          sizes="1150px"
+          quality={95}
+          aria-hidden="true"
+          className="absolute bottom-0 left-1/2 w-[500px] max-w-none ml-[-250px] h-auto"
+          style={{ transform: "translateY(8.03px) scale(1.36293)" }}
+        />
+      </motion.div>
 
-      <Image
-        src="/images/sunny_fg2_ext.webp"
-        alt=""
-        width={1500}
-        height={568}
-        sizes="1600px"
-        quality={95}
+      <motion.div
+        className="absolute inset-0 z-30 pointer-events-none"
+        style={{
+          scale: nearGrass.scale,
+          y: nearGrass.y,
+          transformOrigin: "50% 48%",
+        }}
         aria-hidden="true"
-        className="absolute bottom-0 left-1/2 z-30 w-[500px] max-w-none ml-[-250px] h-auto pointer-events-none"
-        style={{ transform: "translateY(-1.31px) scale(1.89749) translateX(139.08px)" }}
-      />
+      >
+        <Image
+          src="/images/sunny_fg2_ext.webp"
+          alt=""
+          width={1500}
+          height={568}
+          sizes="1600px"
+          quality={95}
+          aria-hidden="true"
+          className="absolute bottom-0 left-1/2 w-[500px] max-w-none ml-[-250px] h-auto"
+          style={{
+            transform: "translateY(-1.31px) scale(1.89749) translateX(139.08px)",
+          }}
+        />
+      </motion.div>
 
-      <Image
-        src="/images/sunny_fg1_ext.webp"
-        alt=""
-        width={1500}
-        height={568}
-        sizes="1750px"
-        quality={95}
+      <motion.div
+        className="absolute inset-0 z-40 pointer-events-none"
+        style={{
+          scale: frontGrass.scale,
+          y: frontGrass.y,
+          transformOrigin: "50% 48%",
+        }}
         aria-hidden="true"
-        className="absolute bottom-0 left-1/2 z-40 w-[500px] max-w-none ml-[-250px] h-auto pointer-events-none"
-        style={{ transform: "translateY(8.03px) scale(2.06467) translateX(100.06px)" }}
-      />
+      >
+        <Image
+          src="/images/sunny_fg1_ext.webp"
+          alt=""
+          width={1500}
+          height={568}
+          sizes="1750px"
+          quality={95}
+          aria-hidden="true"
+          className="absolute bottom-0 left-1/2 w-[500px] max-w-none ml-[-250px] h-auto"
+          style={{
+            transform: "translateY(8.03px) scale(2.06467) translateX(100.06px)",
+          }}
+        />
+      </motion.div>
     </>
   );
 }

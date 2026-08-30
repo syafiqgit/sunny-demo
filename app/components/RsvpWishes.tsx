@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
+import { motion } from "framer-motion";
+import { useReveal } from "./useReveal";
 
 type Attendance = "yes" | "no" | "";
 
@@ -140,13 +142,17 @@ export default function RsvpWishes() {
     [trimmedName, trimmedMessage, attendance],
   );
 
+  const form = useReveal("up");
+  const wishList = useReveal("up", 0.1);
+
   return (
     <section className="relative w-full h-dvh overflow-hidden @container">
       <div className="pointer-events-auto relative z-10 flex h-full flex-col px-[6cqw] pt-[8%] pb-[4%]">
-        <form
+        <motion.form
           onSubmit={handleSubmit}
           noValidate
           className="flex shrink-0 flex-col gap-[3cqw] md:gap-3"
+          {...form}
         >
           <label className="sr-only" htmlFor="rsvp-name">
             Name
@@ -219,9 +225,12 @@ export default function RsvpWishes() {
           >
             {submitting ? "Sending..." : "Submit"}
           </button>
-        </form>
+        </motion.form>
 
-        <div className="mt-[4%] min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-xl border border-[#2a2a2a]/15 bg-white/95 px-[4cqw] py-[2cqw] shadow-sm md:px-5 md:py-3">
+        <motion.div
+          className="mt-[4%] min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-xl border border-[#2a2a2a]/15 bg-white/95 px-[4cqw] py-[2cqw] shadow-sm md:px-5 md:py-3"
+          {...wishList}
+        >
           {wishes.length === 0 ? (
             <p className="py-[6cqw] text-center text-[3cqw] text-[#2a2a2a]/50 md:py-8 md:text-sm">
               Be the first to leave a wish!
@@ -254,7 +263,7 @@ export default function RsvpWishes() {
               ))}
             </ul>
           )}
-        </div>
+        </motion.div>
       </div>
     </section>
   );

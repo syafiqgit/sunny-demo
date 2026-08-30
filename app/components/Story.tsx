@@ -1,6 +1,8 @@
 "use client";
 
 import Image from "next/image";
+import { motion } from "framer-motion";
+import { alternate, useReveal } from "./useReveal";
 
 interface StoryChapter {
   title: string;
@@ -22,20 +24,24 @@ const CHAPTERS: StoryChapter[] = [
   },
 ];
 
-function ChapterItem({ title, body }: StoryChapter) {
+function ChapterItem({ title, body, index }: StoryChapter & { index: number }) {
+  const reveal = useReveal(alternate(index));
+
   return (
-    <article className="mb-[6%] last:mb-0">
+    <motion.article className="mb-[6%] last:mb-0" {...reveal}>
       <h3 className="mb-[2%] text-[4cqw] font-semibold text-white drop-shadow-sm md:text-base">
         {title}
       </h3>
       <p className="mx-auto max-w-[95%] text-[3cqw] leading-relaxed text-white/95 drop-shadow-sm md:text-sm">
         {body}
       </p>
-    </article>
+    </motion.article>
   );
 }
 
 export default function Story() {
+  const title = useReveal("up");
+
   return (
     <section
       aria-label="Our love story"
@@ -70,13 +76,16 @@ export default function Story() {
           </div>
 
           <div className="relative z-10 flex flex-col items-center px-[10%] py-[25%] text-center">
-            <p className="mb-[8%] font-script text-[10cqw] text-white drop-shadow-md md:text-5xl">
+            <motion.p
+              className="mb-[8%] font-script text-[10cqw] text-white drop-shadow-md md:text-5xl"
+              {...title}
+            >
               Our Love Story
-            </p>
+            </motion.p>
 
             <div className="flex flex-col gap-[7%]">
-              {CHAPTERS.map((chapter) => (
-                <ChapterItem key={chapter.title} {...chapter} />
+              {CHAPTERS.map((chapter, index) => (
+                <ChapterItem key={chapter.title} index={index} {...chapter} />
               ))}
             </div>
           </div>
