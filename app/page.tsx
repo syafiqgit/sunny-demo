@@ -2,12 +2,14 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import CoverPage from "./components/CoverPage";
-import Stage from "@/app/components/Stage";
 import MainSection from "./components/MainSection";
+import MusicToggle, { type MusicToggleHandle } from "./components/MusicToggle";
+import Stage from "./components/Stage";
+import { useChapterScroll } from "./components/useChapterScroll";
 
 const SECTION_COUNT = 8;
 const LOADING_DURATION_MS = 2000;
-const OPEN_THRESHOLD = 0.5;
+const MUSIC_SRC = "/audios/michael-buble-love.mp3";
 
 // Each entry is the stageRevealProgress value for that beat of the story -
 // groom; bride; the empty-grass event framing; dress code; closing quote -
@@ -22,18 +24,26 @@ const OPEN_THRESHOLD = 0.5;
 // second scroll just to carry on to the groom.
 const STAGE_CHAPTERS = [0, 0.29, 0.41, 0.54, 0.74, 1];
 const LAST_STAGE_CHAPTER = STAGE_CHAPTERS.length - 1;
+
 // Further wheel/touch input is ignored until this clears, so one gesture
 // (a mouse tick, or a whole trackpad swipe, which fires dozens of wheel
-// events) advances exactly one chapter.
-//
-// Sized against the measured first leg, the longest: rest -> groom springs
-// for ~1.9s (zoom lands at ~0.8s, the pan runs to ~1.9s). At the old 950ms
-// a second scroll arrived with the pan only a third travelled and skipped
-// the groom entirely; this holds until the motion has all but settled.
+// events) advances exactly one chapter. Sized against the measured first leg,
+// the longest: rest -> groom springs for ~1.9s (the zoom lands at ~0.8s, the
+// pan runs to ~1.9s). At the old 950ms a second scroll arrived with the pan
+// only a third travelled and skipped the groom entirely.
+const CHAPTER_LOCK_MS = 1500;
+
 // How far past the last beat MainSection's own scroll carries the stage. The
 // stage keyframes run to 1.2, where the closing quote has gone and the camera
 // has leaned in - see HANDOFF_ZOOM in Stage.tsx.
 const STAGE_HANDOFF_REVEAL = 0.2;
+// Where the stage waits while the cover is still up: the top of its own zoom,
+// pan still centred (the pan only starts at 0.15). Opening releases it and
+// the camera falls back to the resting framing - the same dolly-out the stage
+// plays when you retreat from the groom, which is what makes this a reveal
+// rather than a cut.
+const STAGE_ENTRANCE_REVEAL = 0.15;
+
 // Where the hand-off flips. The 6 -> 7 boundary is a mandatory snap point, so
 // the scroll never rests part-way across it: a wheel tick nudges it forward
 // and CSS snap pulls it straight back, over and over. Driving the panel off
@@ -42,11 +52,16 @@ const STAGE_HANDOFF_REVEAL = 0.2;
 // animates the panel and Stage's own spring carries the camera.
 const MAIN_SECTION_ENTER = 6.5;
 const MAIN_SECTION_ENTER_MS = 700;
+
 // Opening the invitation. The 0 -> 1 boundary is a mandatory snap point like
-// the MainSection one, so the crossing is a flip here too and the two layers
+// the MainSection one, so this crossing is a flip too and the two layers
 // dissolve into each other on their own clock rather than tracking a scroll
 // position that snaps. The threshold is low so the blend starts as the scroll
 // leaves the cover, not half way to the stage.
+const COVER_EXIT = 0.2;
+const COVER_FADE_MS = 900;
+const OPEN_THRESHOLD = 0.5;
+
 // How much of the panel's leading edge is feathered while it is travelling.
 // A hard edge on a translucent panel cuts the scene in two - crisp above the
 // line, veiled below it - which reads as the panel wedging into the stage
@@ -54,17 +69,6 @@ const MAIN_SECTION_ENTER_MS = 700;
 // panel has landed its top edge is the top of the screen and a soft band
 // there would just wash out the countdown.
 const PANEL_FEATHER = "linear-gradient(to bottom, transparent 0%, #000 18%)";
-const COVER_EXIT = 0.2;
-const COVER_FADE_MS = 900;
-// Where the stage waits while the cover is still up: the top of its own zoom,
-// pan still centred (the pan only starts at 0.15). Opening releases it and
-// the camera falls back to the resting framing - the same dolly-out the stage
-// plays when you retreat from the groom, which is what makes this a reveal
-// rather than a cut.
-const STAGE_ENTRANCE_REVEAL = 0.15;
-const CHAPTER_LOCK_MS = 1500;
-const WHEEL_THRESHOLD = 4;
-const TOUCH_THRESHOLD = 12;
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
@@ -72,17 +76,23 @@ function clamp(value: number, min: number, max: number) {
 
 export default function Home() {
   const [isLoading, setIsLoading] = useState(true);
-  const [scrollProgress, setScrollProgress] = useState(0);
   const [hasOpened, setHasOpened] = useState(false);
   const [stageChapter, setStageChapter] = useState(0);
-  // Tracks where the panel has actually come to rest, so it can be compared
-  // with where it is headed: the two differ exactly while it is in motion.
+  // The scroll position itself is never on screen - only these two thresholds
+  // on it are. Keeping them as booleans rather than as the raw progress is
+  // what stops every scroll frame from re-rendering the whole tree (and with
+  // it the stage, the cover and the panel) for a number nothing renders.
+  const [atStage, setAtStage] = useState(false);
+  const [mainSectionIn, setMainSectionIn] = useState(false);
+  // Where the panel has actually come to rest, so it can be compared with
+  // where it is headed: the two differ exactly while it is in motion.
   const [panelSettled, setPanelSettled] = useState(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const rafRef = useRef<number | null>(null);
   const openFrameRef = useRef<number | null>(null);
-  const lastProgressRef = useRef(0);
+  const progressRef = useRef(0);
+  const hasOpenedRef = useRef(false);
 
   // Whether wheel/touch input is currently being intercepted to drive
   // stageChapter instead of native scroll - i.e. "docked" at the stage.
@@ -90,50 +100,24 @@ export default function Home() {
   const chapterLockRef = useRef(false);
   const chapterLockTimerRef = useRef<number | null>(null);
   const stageChapterRef = useRef(0);
-  const touchStartYRef = useRef(0);
+  const musicRef = useRef<MusicToggleHandle>(null);
 
   useEffect(() => {
-    const timer = window.setTimeout(() => {
-      setIsLoading(false);
-    }, LOADING_DURATION_MS);
-
-    return () => {
-      window.clearTimeout(timer);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (scrollProgress >= OPEN_THRESHOLD && !hasOpened) {
-      setHasOpened(true);
-    }
-  }, [scrollProgress, hasOpened]);
-
-  const handleScroll = useCallback(() => {
-    if (rafRef.current !== null) {
-      cancelAnimationFrame(rafRef.current);
-    }
-
-    rafRef.current = requestAnimationFrame(() => {
-      const el = containerRef.current;
-      if (!el) return;
-
-      const rawProgress = el.scrollTop / el.clientHeight;
-      const clampedProgress = clamp(rawProgress, 0, SECTION_COUNT - 1);
-
-      if (clampedProgress !== lastProgressRef.current) {
-        lastProgressRef.current = clampedProgress;
-        setScrollProgress(clampedProgress);
-      }
-    });
+    const timer = window.setTimeout(
+      () => setIsLoading(false),
+      LOADING_DURATION_MS,
+    );
+    return () => window.clearTimeout(timer);
   }, []);
 
   useEffect(() => {
     return () => {
-      if (rafRef.current !== null) {
-        cancelAnimationFrame(rafRef.current);
-      }
+      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
       if (openFrameRef.current !== null) {
         cancelAnimationFrame(openFrameRef.current);
+      }
+      if (chapterLockTimerRef.current !== null) {
+        window.clearTimeout(chapterLockTimerRef.current);
       }
     };
   }, []);
@@ -150,17 +134,68 @@ export default function Home() {
       const el = containerRef.current;
       if (!el) return;
 
-      const targetIndex = clamp(sectionIndex, 0, SECTION_COUNT - 1);
-
       el.scrollTo({
-        top: targetIndex * el.clientHeight,
+        top: clamp(sectionIndex, 0, SECTION_COUNT - 1) * el.clientHeight,
         behavior,
       });
     },
     [],
   );
 
-  const releaseChapterLock = useCallback(() => {
+  // Re-engaging the dock after a plain continuous scroll. Both "Open
+  // Invitation" and handleBackToStage set chapterModeRef directly, but a
+  // reader who retreats to the cover and then simply scrolls forward natively
+  // would not otherwise re-dock, and stageRevealProgress (chapter-driven, not
+  // scroll-driven) would sit frozen while the scroll sailed past it.
+  //
+  // Only on the rising edge: the hand-off out of the last beat also releases
+  // chapterMode and drives the scroll from 1 up to 7, and without the "from
+  // below 1" guard that same climb would snap it straight back to section 1.
+  const readScrollPosition = useCallback(() => {
+    const el = containerRef.current;
+    if (!el || el.clientHeight === 0) return;
+
+    const previous = progressRef.current;
+    const progress = clamp(
+      el.scrollTop / el.clientHeight,
+      0,
+      SECTION_COUNT - 1,
+    );
+    progressRef.current = progress;
+
+    if (!hasOpenedRef.current && progress >= OPEN_THRESHOLD) {
+      hasOpenedRef.current = true;
+      setHasOpened(true);
+    }
+
+    setAtStage(progress >= COVER_EXIT);
+    setMainSectionIn(progress >= MAIN_SECTION_ENTER);
+
+    if (
+      hasOpenedRef.current &&
+      !chapterModeRef.current &&
+      previous < 1 &&
+      progress >= 1
+    ) {
+      chapterModeRef.current = true;
+      scrollToSection(1);
+    }
+  }, [scrollToSection]);
+
+  // One read per frame at most. Scroll events outrun the display on every
+  // platform, and coalescing them here is what keeps the handler off the
+  // critical path of the compositor.
+  const handleScroll = useCallback(() => {
+    if (rafRef.current !== null) return;
+
+    rafRef.current = requestAnimationFrame(() => {
+      rafRef.current = null;
+      readScrollPosition();
+    });
+  }, [readScrollPosition]);
+
+  const lockChapter = useCallback(() => {
+    chapterLockRef.current = true;
     if (chapterLockTimerRef.current !== null) {
       window.clearTimeout(chapterLockTimerRef.current);
     }
@@ -170,57 +205,64 @@ export default function Home() {
     }, CHAPTER_LOCK_MS);
   }, []);
 
+  const goToChapter = useCallback(
+    (next: number) => {
+      stageChapterRef.current = next;
+      setStageChapter(next);
+      lockChapter();
+    },
+    [lockChapter],
+  );
+
   // One tick forward: advance to the next beat, or - from the last one -
   // release the dock and go straight to MainSection.
   //
   // That last step used to hand off to section 6, where MainSection is still
-  // parked off-screen. The reader then had to make a second, separate gesture
-  // - and it had to be big enough to clear the 6 -> 7 snap midpoint, or CSS
-  // snap pulled it back to 6, so a plain wheel tick got them nowhere. One
-  // tick out of the last beat now lands the panel. Section 6 stays what
-  // handleBackToStage returns to: the stage's own resting section, not a
-  // stop on the way out.
-  //
-  // The jump itself is instant. Smooth-scrolling six viewport heights held
-  // the panel still for ~680ms before the threshold flipped, for a scroll
-  // position nobody can see; the panel's own transition is the animation.
+  // parked off-screen; the reader then had to make a second gesture big enough
+  // to clear the 6 -> 7 snap midpoint, so a plain wheel tick got them nowhere.
+  // Section 6 stays what handleBackToStage returns to: the stage's own resting
+  // section, not a stop on the way out. The jump itself is instant - smooth-
+  // scrolling six viewport heights held the panel still for ~680ms before the
+  // threshold flipped, for a scroll position nobody can see.
   const advanceChapter = useCallback(() => {
     if (chapterLockRef.current) return;
-    chapterLockRef.current = true;
 
     if (stageChapterRef.current >= LAST_STAGE_CHAPTER) {
       chapterModeRef.current = false;
-      chapterLockRef.current = false;
       scrollToSection(SECTION_COUNT - 1, "instant");
       return;
     }
 
-    const next = stageChapterRef.current + 1;
-    stageChapterRef.current = next;
-    setStageChapter(next);
-    releaseChapterLock();
-  }, [releaseChapterLock, scrollToSection]);
+    goToChapter(stageChapterRef.current + 1);
+  }, [goToChapter, scrollToSection]);
 
-  // One tick back: retreat a beat, or - from the first one - undock and
-  // hand back to the cover.
+  // One tick back: retreat a beat, or - from the first one - undock and hand
+  // back to the cover.
   const retreatChapter = useCallback(() => {
     if (chapterLockRef.current) return;
-    chapterLockRef.current = true;
 
     if (stageChapterRef.current <= 0) {
       chapterModeRef.current = false;
-      chapterLockRef.current = false;
       scrollToSection(0);
       return;
     }
 
-    const next = stageChapterRef.current - 1;
-    stageChapterRef.current = next;
-    setStageChapter(next);
-    releaseChapterLock();
-  }, [releaseChapterLock, scrollToSection]);
+    goToChapter(stageChapterRef.current - 1);
+  }, [goToChapter, scrollToSection]);
+
+  useChapterScroll({
+    targetRef: containerRef,
+    activeRef: chapterModeRef,
+    onForward: advanceChapter,
+    onBackward: retreatChapter,
+  });
 
   const handleOpen = useCallback(() => {
+    // First, and synchronously: this is the reader's one deliberate click, and
+    // every autoplay policy wants the play() call inside that gesture.
+    musicRef.current?.play();
+
+    hasOpenedRef.current = true;
     setHasOpened(true);
     stageChapterRef.current = 0;
     setStageChapter(0);
@@ -229,10 +271,9 @@ export default function Home() {
     if (openFrameRef.current !== null) {
       cancelAnimationFrame(openFrameRef.current);
     }
-
     openFrameRef.current = requestAnimationFrame(() => {
-      scrollToSection(1);
       openFrameRef.current = null;
+      scrollToSection(1);
     });
   }, [scrollToSection]);
 
@@ -241,106 +282,21 @@ export default function Home() {
     scrollToSection(6);
   }, [scrollToSection]);
 
-  // Safety net for reaching the stage by plain continuous scroll instead of
-  // the "Open Invitation" button or handleBackToStage - both of those set
-  // chapterModeRef directly, but a user who retreats to the cover and then
-  // just scrolls forward natively wouldn't otherwise re-engage the dock, and
-  // stageRevealProgress (chapter-driven, not scroll-driven) would sit frozen
-  // while scrollProgress sailed straight past it to MainSection.
-  //
-  // Must only fire on the rising edge (crossing up into >=1 from below) -
-  // advanceChapter's own hand-off to MainSection also releases chapterMode
-  // and drives scrollProgress from 1 up to 6, and without the "from below 1"
-  // guard this effect re-triggers on that same climb and snaps it straight
-  // back to section 1, undoing the hand-off before it can land.
-  const prevScrollProgressRef = useRef(0);
-  useEffect(() => {
-    const prev = prevScrollProgressRef.current;
-    prevScrollProgressRef.current = scrollProgress;
-
-    if (hasOpened && !chapterModeRef.current && prev < 1 && scrollProgress >= 1) {
-      chapterModeRef.current = true;
-      scrollToSection(1);
-    }
-  }, [scrollProgress, hasOpened, scrollToSection]);
-
-  // Docked at the stage (chapterModeRef true), wheel/touch input is
-  // intercepted here and drives stageChapter one tick at a time instead of
-  // scrolling the container - native scroll stays untouched everywhere else
-  // (cover entrance, the section-6/MainSection boundary, MainSection's own
-  // free scroll), so the chapter lock never fights those.
-  useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
-
-    const handleWheel = (event: WheelEvent) => {
-      if (!chapterModeRef.current) return;
-      if (Math.abs(event.deltaY) < WHEEL_THRESHOLD) return;
-
-      event.preventDefault();
-      if (event.deltaY > 0) {
-        advanceChapter();
-      } else {
-        retreatChapter();
-      }
-    };
-
-    const handleTouchStart = (event: TouchEvent) => {
-      touchStartYRef.current = event.touches[0]?.clientY ?? 0;
-    };
-
-    const handleTouchMove = (event: TouchEvent) => {
-      if (!chapterModeRef.current) return;
-
-      const currentY = event.touches[0]?.clientY ?? 0;
-      const deltaY = touchStartYRef.current - currentY;
-
-      if (Math.abs(deltaY) < TOUCH_THRESHOLD) {
-        event.preventDefault();
-        return;
-      }
-
-      event.preventDefault();
-      if (deltaY > 0) {
-        advanceChapter();
-      } else {
-        retreatChapter();
-      }
-      touchStartYRef.current = currentY;
-    };
-
-    el.addEventListener("wheel", handleWheel, { passive: false });
-    el.addEventListener("touchstart", handleTouchStart, { passive: true });
-    el.addEventListener("touchmove", handleTouchMove, { passive: false });
-
-    return () => {
-      el.removeEventListener("wheel", handleWheel);
-      el.removeEventListener("touchstart", handleTouchStart);
-      el.removeEventListener("touchmove", handleTouchMove);
-      if (chapterLockTimerRef.current !== null) {
-        window.clearTimeout(chapterLockTimerRef.current);
-      }
-    };
-  }, [advanceChapter, retreatChapter]);
-
-  const coverToStage = clamp(scrollProgress, 0, 1);
-  const mainSectionIn = scrollProgress >= MAIN_SECTION_ENTER;
-  // Driven by stageChapter (one wheel/swipe tick = one beat) rather than
-  // continuous scroll position - see the wheel/touch handlers above. The one
-  // exception is the hand-off out of the last beat, which is a plain scroll:
-  // crossing into MainSection carries it on past 1, so the stage is still
-  // moving underneath as the panel arrives - the spring inside Stage does the
-  // easing, which is why this can be a flip rather than a ramp. Guarded on
-  // the last chapter because the scrollbar can be dragged past the dock, and
-  // adding the tail to any earlier beat would land on the wrong framing.
+  // Driven by stageChapter (one wheel/swipe tick = one beat) rather than by
+  // continuous scroll position. The one exception is the hand-off out of the
+  // last beat, which is a plain scroll: crossing into MainSection carries the
+  // camera on past 1, so the stage is still moving underneath as the panel
+  // arrives - the spring inside Stage does the easing, which is why this can
+  // be a flip rather than a ramp. Guarded on the last chapter because the
+  // scrollbar can be dragged past the dock, and adding the tail to any
+  // earlier beat would land on the wrong framing.
   const stageRevealProgress = !hasOpened
     ? STAGE_ENTRANCE_REVEAL
     : STAGE_CHAPTERS[stageChapter] +
-      (stageChapter === LAST_STAGE_CHAPTER
-        ? STAGE_HANDOFF_REVEAL * Number(mainSectionIn)
+      (stageChapter === LAST_STAGE_CHAPTER && mainSectionIn
+        ? STAGE_HANDOFF_REVEAL
         : 0);
 
-  const atStage = coverToStage >= COVER_EXIT;
   // True from the moment the panel is sent on its way until it arrives, in
   // either direction.
   const panelMoving = mainSectionIn !== panelSettled;
@@ -362,8 +318,8 @@ export default function Home() {
         <div
           ref={containerRef}
           onScroll={handleScroll}
-          className={`absolute inset-0 z-0 snap-y snap-mandatory overscroll-y-contain scroll-smooth scrollbar-none [&::-webkit-scrollbar]:hidden ${
-            !hasOpened ? "overflow-hidden" : "overflow-y-auto"
+          className={`scrollbar-none absolute inset-0 z-0 snap-y snap-mandatory scroll-smooth overscroll-y-contain ${
+            hasOpened ? "overflow-y-auto" : "overflow-hidden"
           }`}
         >
           {Array.from({ length: SECTION_COUNT }, (_, sectionIndex) => (
@@ -393,9 +349,14 @@ export default function Home() {
           </div>
 
           <div
-            className="pointer-events-none absolute inset-0 will-change-transform ease-out"
+            className="pointer-events-none absolute inset-0 ease-out"
             onTransitionEnd={(event) => {
-              if (event.propertyName === "transform") {
+              // Guarded against bubbling: a button's own transition inside the
+              // panel would otherwise be read as the panel landing.
+              if (
+                event.target === event.currentTarget &&
+                event.propertyName === "transform"
+              ) {
                 setPanelSettled(mainSectionIn);
               }
             }}
@@ -405,6 +366,11 @@ export default function Home() {
                 : "translate3d(0, 100%, 0)",
               transitionProperty: "transform",
               transitionDuration: `${MAIN_SECTION_ENTER_MS}ms`,
+              // Both hints are worn only in flight. A permanent will-change
+              // keeps a full-screen compositor layer alive behind everything
+              // else, and the feather costs a masking pass on a panel that is
+              // already translucent and blurring what sits under it.
+              willChange: panelMoving ? "transform" : undefined,
               maskImage: panelMoving ? PANEL_FEATHER : undefined,
               WebkitMaskImage: panelMoving ? PANEL_FEATHER : undefined,
             }}
@@ -413,6 +379,8 @@ export default function Home() {
           </div>
         </div>
       </div>
+
+      <MusicToggle ref={musicRef} src={MUSIC_SRC} visible={hasOpened} />
     </main>
   );
 }

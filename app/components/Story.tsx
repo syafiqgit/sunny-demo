@@ -58,6 +58,7 @@ export default function Story() {
             alt=""
             width={800}
             height={340}
+            sizes="(max-width: 500px) 115vw, 575px"
             className="h-auto w-full"
           />
         </div>
@@ -101,6 +102,7 @@ export default function Story() {
             alt=""
             width={800}
             height={340}
+            sizes="(max-width: 500px) 115vw, 575px"
             className="h-auto w-full"
           />
         </div>
@@ -108,7 +110,7 @@ export default function Story() {
 
       <span
         aria-hidden="true"
-        className="mt-[10%] block animate-bounce text-[3cqw] font-medium text-[#2a2a2a]/60 md:text-xs"
+        className="mt-[10%] block animate-bounce motion-reduce:animate-none text-[3cqw] font-medium text-[#2a2a2a]/60 md:text-xs"
       >
         Swipe up
       </span>

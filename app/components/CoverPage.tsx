@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, memo } from "react";
+import { memo } from "react";
 import Image from "next/image";
 import { Mail, ChevronDown } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
@@ -22,17 +22,6 @@ function CoverPage({
 }: CoverPageProps) {
   const shouldReduceMotion = useReducedMotion();
 
-  useEffect(() => {
-    if (hasOpened) return;
-
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-
-    return () => {
-      document.body.style.overflow = previousOverflow;
-    };
-  }, [hasOpened]);
-
   return (
     <section
       aria-labelledby="cover-title"
@@ -44,7 +33,8 @@ function CoverPage({
           alt={`Wedding of ${COUPLE_NAMES}`}
           fill
           priority
-          sizes="100vw"
+          fetchPriority="high"
+          sizes="(max-width: 500px) 100vw, 500px"
           className="object-cover object-top"
         />
       </div>
@@ -129,7 +119,7 @@ function CoverPage({
   );
 }
 
-// Memoised: the page re-renders on every scroll frame to drive the cover
-// fade, and without this that reconciles this whole subtree each time - which
-// is what put 60-100ms frames in the middle of the hand-off.
+// Memoised: the page re-renders whenever a scroll threshold flips, and without
+// this that reconciles this whole subtree each time - which is what put
+// 60-100ms frames in the middle of the hand-off.
 export default memo(CoverPage);

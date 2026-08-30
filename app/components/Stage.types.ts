@@ -55,8 +55,6 @@ export interface StageProps {
 export interface SceneMotion {
   scale: MotionValue<number>;
   translateX: MotionValue<string>;
-  translateY: MotionValue<string>;
-  scrimOpacity: MotionValue<number>;
 }
 
 /**
@@ -134,7 +132,7 @@ export const DEFAULT_RECEPTION: EventDetail = {
   mapsUrl: "https://maps.google.com",
 };
 
-export const DEFAULT_DRESS_CODE: DressCodeInfo = {
+export const DEFAULT_DRESS_CODE: Required<DressCodeInfo> = {
   title: "Dresscode",
   description:
     "We would love for our guests to wear these colors on our special day.",

@@ -7,8 +7,29 @@
 
 html,
 body {
-  overscroll-behavior-y: none; /* matikan pull-to-refresh & rubber-band bounce */
   height: 100%;
+  /* Matikan pull-to-refresh & rubber-band bounce. */
+  overscroll-behavior-y: none;
+  /* Semua yang bisa di-scroll punya container-nya sendiri (mobile-canvas ->
+     section scroller -> MainSection), jadi dokumen tidak pernah perlu
+     scroll. Menguncinya di CSS lebih andal daripada menyetel
+     document.body.style dari dalam komponen. */
+  overflow: hidden;
+}
+
+html {
+  /* Formulir RSVP memakai kontrol native - kunci ke skema terang supaya
+     tidak berubah warna sendiri di perangkat bertema gelap. */
+  color-scheme: light;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  background-color: #1a1a1a;
+  color: #333333;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
 }
 
 @layer utilities {
@@ -21,11 +42,37 @@ body {
     background-color: #f5f6f1;
     box-shadow: 0 0 40px rgba(0, 0, 0, 0.4);
     overflow: hidden;
-    overscroll-behavior: none; /* jaga-jaga kalau ada nested scroll container */
+    /* jaga-jaga kalau ada nested scroll container */
+    overscroll-behavior: none;
+  }
+
+  /* Bukan utilitas bawaan Tailwind - sebelumnya kelas ini tidak melakukan
+     apa-apa dan hanya selector ::-webkit-scrollbar yang bekerja, sehingga
+     Firefox tetap menampilkan scrollbar. */
+  .scrollbar-none {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
   }
 }
 
-body {
-  background-color: #1a1a1a;
-  color: #333333;
+/* Satu jaring pengaman untuk seluruh halaman: komponen sudah membaca
+   useReducedMotion untuk animasi Framer, ini menangani sisanya (animate-bounce,
+   transition CSS, scroll-smooth). */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto !important;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

@@ -11,17 +11,25 @@ interface MainSectionProps {
   onBackToStage: () => void;
 }
 
+// Long enough to cover the panel's own slide back down (MAIN_SECTION_ENTER_MS
+// in page.tsx), so the tail of one gesture cannot ask for the stage twice.
+const RETURN_LOCK_MS = 700;
+// The same deadbands the stage dock uses, so pulling back out of MainSection
+// takes as deliberate a gesture as moving between beats does - a trackpad's
+// idle jitter must not fling the reader out of the panel.
+const WHEEL_THRESHOLD = 4;
+const TOUCH_THRESHOLD = 12;
+
 function MainSection({ onBackToStage }: MainSectionProps) {
   const sectionRef = useRef<HTMLDivElement>(null);
-
-  const touchStartYRef = useRef(0);
   const isReturningRef = useRef(false);
   const returnTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
     const el = sectionRef.current;
-
     if (!el) return;
+
+    let touchStartY = 0;
 
     const requestStageReturn = () => {
       if (isReturningRef.current) return;
@@ -31,99 +39,56 @@ function MainSection({ onBackToStage }: MainSectionProps) {
       returnTimerRef.current = window.setTimeout(() => {
         isReturningRef.current = false;
         returnTimerRef.current = null;
-      }, 700);
+      }, RETURN_LOCK_MS);
     };
 
-    /**
-     * Desktop / Mouse wheel
-     */
+    // Only from the very top, and only travelling upward: anywhere else this
+    // is an ordinary scroll and must be left entirely alone.
+    const atTop = () => el.scrollTop <= 1;
+
     const handleWheel = (event: WheelEvent) => {
-      const isAtTop = el.scrollTop <= 1;
-      const isScrollingUp = event.deltaY < 0;
-
-      if (!isAtTop || !isScrollingUp) {
-        return;
-      }
-
+      if (!atTop() || event.deltaY > -WHEEL_THRESHOLD) return;
       requestStageReturn();
     };
 
-    /**
-     * Mobile / Touch start
-     */
     const handleTouchStart = (event: TouchEvent) => {
-      touchStartYRef.current = event.touches[0]?.clientY ?? 0;
+      touchStartY = event.touches[0]?.clientY ?? 0;
     };
 
-    /**
-     * Mobile / Swipe
-     *
-     * Finger bergerak ke bawah =
-     * user sedang ingin scroll ke atas.
-     */
+    // Finger travelling down = the reader is pulling the page back up.
     const handleTouchMove = (event: TouchEvent) => {
+      if (!atTop()) return;
+
       const currentY = event.touches[0]?.clientY ?? 0;
-
-      const deltaY = currentY - touchStartYRef.current;
-
-      const isAtTop = el.scrollTop <= 1;
-
-      const isSwipingDown = deltaY > 12;
-
-      if (!isAtTop || !isSwipingDown) {
-        return;
-      }
+      if (currentY - touchStartY < TOUCH_THRESHOLD) return;
 
       requestStageReturn();
     };
 
-    /**
-     * Reset posisi gesture
-     */
     const handleTouchEnd = () => {
-      touchStartYRef.current = 0;
+      touchStartY = 0;
     };
 
-    /**
-     * Native listener sengaja digunakan.
-     * Tidak memakai preventDefault(), sehingga
-     * tidak menimbulkan error passive listener.
-     */
-    el.addEventListener("wheel", handleWheel, {
-      passive: true,
-    });
-
-    el.addEventListener("touchstart", handleTouchStart, {
-      passive: true,
-    });
-
-    el.addEventListener("touchmove", handleTouchMove, {
-      passive: true,
-    });
-
-    el.addEventListener("touchend", handleTouchEnd, {
-      passive: true,
-    });
-
-    el.addEventListener("touchcancel", handleTouchEnd, {
-      passive: true,
-    });
+    // All passive: nothing here calls preventDefault, so the browser can keep
+    // scrolling on the compositor thread instead of waiting on these handlers.
+    const options = { passive: true } as const;
+    el.addEventListener("wheel", handleWheel, options);
+    el.addEventListener("touchstart", handleTouchStart, options);
+    el.addEventListener("touchmove", handleTouchMove, options);
+    el.addEventListener("touchend", handleTouchEnd, options);
+    el.addEventListener("touchcancel", handleTouchEnd, options);
 
     return () => {
       if (returnTimerRef.current !== null) {
         window.clearTimeout(returnTimerRef.current);
         returnTimerRef.current = null;
       }
-
       isReturningRef.current = false;
+
       el.removeEventListener("wheel", handleWheel);
-
       el.removeEventListener("touchstart", handleTouchStart);
-
       el.removeEventListener("touchmove", handleTouchMove);
-
       el.removeEventListener("touchend", handleTouchEnd);
-
       el.removeEventListener("touchcancel", handleTouchEnd);
     };
   }, [onBackToStage]);
@@ -131,7 +96,7 @@ function MainSection({ onBackToStage }: MainSectionProps) {
   return (
     <div
       ref={sectionRef}
-      className="pointer-events-auto relative isolate h-full min-h-0 w-full touch-pan-y overflow-y-auto overscroll-y-contain bg-white/85 backdrop-blur-[2px] scrollbar-none [&::-webkit-scrollbar]:hidden"
+      className="scrollbar-none pointer-events-auto relative isolate h-full min-h-0 w-full touch-pan-y overflow-y-auto overscroll-y-contain bg-white/85 backdrop-blur-[2px]"
     >
       <Countdown />
       <RsvpWishes />
@@ -142,7 +107,7 @@ function MainSection({ onBackToStage }: MainSectionProps) {
   );
 }
 
-// Memoised: the page re-renders on every scroll frame to drive the cover
-// fade, and without this that reconciles this whole subtree each time - which
-// is what put 60-100ms frames in the middle of the hand-off.
+// Memoised: the page re-renders whenever a scroll threshold flips, and without
+// this that reconciles this whole subtree each time - which is what put
+// 60-100ms frames in the middle of the hand-off.
 export default memo(MainSection);

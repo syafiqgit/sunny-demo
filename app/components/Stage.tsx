@@ -6,6 +6,7 @@ import {
   motion,
   useMotionValue,
   useSpring,
+  useReducedMotion,
   useTransform,
   type MotionValue,
 } from "framer-motion";
@@ -148,18 +149,24 @@ export default function Stage({
   closingQuote = DEFAULT_CLOSING_QUOTE,
   streamingUrl = "#",
 }: StageProps) {
+  const shouldReduceMotion = useReducedMotion();
   const rawProgress = useMotionValue(revealProgress);
 
   useEffect(() => {
     rawProgress.set(revealProgress);
   }, [revealProgress, rawProgress]);
 
-  const progress = useSpring(rawProgress, {
+  const springProgress = useSpring(rawProgress, {
     stiffness: 25, // Dinaikkan sedikit dari 15 agar lebih responsif saat di-scroll
     damping: 32, // Pengereman tetap halus dan mencegah efek mantul
     mass: 1.8, // Dikurangi dari 3 agar kamera sampai di tujuan lebih cepat
     restDelta: 0.0005,
   });
+  // Readers who ask for reduced motion get exactly the same framings, cut to
+  // rather than flown to: every keyframe below is solved against `progress`,
+  // so dropping the spring removes the travel without touching a single
+  // composition value.
+  const progress = shouldReduceMotion ? rawProgress : springProgress;
 
   // Pushes in on the couple and holds there. The camera origin sits on the
   // couple, so no translation is needed to keep them framed.
@@ -234,11 +241,6 @@ export default function Stage({
   // the zoom and the pan overlap (0.15-0.26).
   const canopyX = useTransform([panX, scale], ([pan, cameraScale]: number[]) =>
     cameraScale === 0 ? "0cqw" : `${(pan * (CANOPY_PAN - 1)) / cameraScale}cqw`,
-  );
-  const translateY = useTransform(
-    progress,
-    [0, 0.2, 0.4, 0.6, 0.8, 1, 1.2],
-    ["0%", "0%", "0%", "0%", "0%", "0%", "0%"],
   );
 
   const openingQuoteOpacity = useTransform(progress, [0, 0.1], [1, 0]);
@@ -319,19 +321,21 @@ export default function Stage({
     ([p, cameraScale]: number[]) =>
       Number(p > 0.8 && p < 1.04 && cameraScale < CLOSING_QUOTE_CUE_SCALE),
   );
-  const closingQuoteOpacity = useSpring(closingQuoteCue, {
+  const closingQuoteFade = useSpring(closingQuoteCue, {
     stiffness: 90,
     damping: 30,
     mass: 1,
     restDelta: 0.001,
   });
+  const closingQuoteOpacity = shouldReduceMotion
+    ? closingQuoteCue
+    : closingQuoteFade;
 
   return (
     <section className="relative w-full h-dvh overflow-hidden bg-[#7bbff1] @container">
       <StageScene
         scale={scale}
         translateX={translateX}
-        translateY={translateY}
         canopy={{ ...canopy, x: canopyX }}
         field={field}
         couple={{ ...couple, opacity: coupleOpacity }}

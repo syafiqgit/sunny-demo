@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useState, useSyncExternalStore } from "react";
 import { motion } from "framer-motion";
 import { useReveal } from "./useReveal";
 
@@ -18,36 +18,41 @@ const MESSAGE_MAX = 300;
 let localIdSequence = 0;
 
 // Seed data. GANTI/hapus setelah backend RSVP tersedia.
+//
+// Fixed timestamps, not `Date.now() - n`: this module is evaluated once when
+// the server process starts and again in the browser, so a relative seed made
+// the two disagree by however long the server had been up - and the rendered
+// "x months ago" then failed hydration.
 const INITIAL_WISHES: Wish[] = [
   {
     id: "seed-1",
     name: "R",
     message:
       "Congrats buat pasangan baru semoga semuanya berjalan dengan lancar!",
-    createdAt: Date.now() - (92 * 86400000 + 2 * 3600000),
+    createdAt: Date.parse("2026-05-30T14:00:00Z"),
   },
   {
     id: "seed-2",
     name: "Nayla",
     message: "Happy Wedding",
-    createdAt: Date.now() - (140 * 86400000 + 1 * 3600000),
+    createdAt: Date.parse("2026-04-12T09:00:00Z"),
   },
   {
     id: "seed-3",
     name: "Lauren",
     message: "Congrats!",
-    createdAt: Date.now() - (217 * 86400000 + 19 * 3600000),
+    createdAt: Date.parse("2026-01-25T17:00:00Z"),
   },
   {
     id: "seed-4",
     name: "Chelsea",
-    message: "Happy wedding \u2764\ufe0f",
-    createdAt: Date.now() - 240 * 86400000,
+    message: "Happy wedding ❤️",
+    createdAt: Date.parse("2026-01-02T08:00:00Z"),
   },
 ];
 
-function formatRelativeTime(timestamp: number): string {
-  const diffMs = Math.max(Date.now() - timestamp, 0);
+function formatRelativeTime(timestamp: number, now: number): string {
+  const diffMs = Math.max(now - timestamp, 0);
   const days = Math.floor(diffMs / 86400000);
   const hours = Math.floor((diffMs % 86400000) / 3600000);
 
@@ -57,6 +62,18 @@ function formatRelativeTime(timestamp: number): string {
   const months = Math.floor(days / 30);
   return `${months} month${months !== 1 ? "s" : ""} ago`;
 }
+
+// The reader's own clock, reached without a setState-in-effect. The store
+// never emits: React renders the server snapshot (null) into the HTML and
+// re-renders with the client one once hydration is done, which is the only
+// transition this needs. The value is cached because useSyncExternalStore
+// requires a stable snapshot - re-reading the clock on every render would
+// spin forever - and a frozen reference point is fine for labels measured in
+// hours and months.
+let clientNow: number | null = null;
+const subscribeNever = () => () => {};
+const getNow = () => (clientNow ??= Date.now());
+const getServerNow = () => null;
 
 function createId(): string {
   if (typeof globalThis.crypto?.randomUUID === "function") {
@@ -71,6 +88,9 @@ function getInitial(name: string): string {
   return name.trim().charAt(0).toUpperCase() || "?";
 }
 
+const FIELD_CLASS =
+  "w-full rounded-lg border border-[#2a2a2a]/20 bg-white px-[4cqw] py-[3cqw] text-[3.4cqw] text-[#2a2a2a] shadow-sm outline-none transition-shadow placeholder:text-[#2a2a2a]/50 focus:ring-2 focus:ring-[#7a5c48]/40 disabled:opacity-60 md:px-4 md:py-2.5 md:text-sm";
+
 export default function RsvpWishes() {
   const [name, setName] = useState("");
   const [message, setMessage] = useState("");
@@ -78,32 +98,27 @@ export default function RsvpWishes() {
   const [wishes, setWishes] = useState<Wish[]>(INITIAL_WISHES);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  // The page is statically prerendered, so a relative label rendered on the
+  // server would be baked in at build time and could be months stale by the
+  // time anyone reads it. `null` until the client clock is available; the row
+  // reserves its own height below so nothing shifts when the labels land.
+  const now = useSyncExternalStore(subscribeNever, getNow, getServerNow);
 
   const trimmedName = name.trim();
   const trimmedMessage = message.trim();
 
-  const canSubmit = useMemo(
-    () =>
-      trimmedName.length > 0 &&
-      trimmedName.length <= NAME_MAX &&
-      trimmedMessage.length > 0 &&
-      trimmedMessage.length <= MESSAGE_MAX &&
-      attendance !== "" &&
-      !submitting,
-    [trimmedName, trimmedMessage, attendance, submitting],
-  );
+  const isValid =
+    trimmedName.length > 0 &&
+    trimmedName.length <= NAME_MAX &&
+    trimmedMessage.length > 0 &&
+    trimmedMessage.length <= MESSAGE_MAX &&
+    attendance !== "";
 
   const handleSubmit = useCallback(
-    async (e: React.FormEvent) => {
-      e.preventDefault();
+    async (event: React.FormEvent) => {
+      event.preventDefault();
 
-      if (
-        !trimmedName ||
-        trimmedName.length > NAME_MAX ||
-        !trimmedMessage ||
-        trimmedMessage.length > MESSAGE_MAX ||
-        !attendance
-      ) {
+      if (!isValid) {
         setError("Please fill in your name, message, and attendance.");
         return;
       }
@@ -129,7 +144,7 @@ export default function RsvpWishes() {
           createdAt: Date.now(),
         };
 
-        setWishes((prev) => [newWish, ...prev]);
+        setWishes((previous) => [newWish, ...previous]);
         setName("");
         setMessage("");
         setAttendance("");
@@ -139,8 +154,12 @@ export default function RsvpWishes() {
         setSubmitting(false);
       }
     },
-    [trimmedName, trimmedMessage, attendance],
+    [isValid, trimmedName, trimmedMessage],
   );
+
+  // Any edit is an attempt to fix whatever the message was complaining about,
+  // so it should not outlive the next keystroke.
+  const clearError = useCallback(() => setError(null), []);
 
   const form = useReveal("up");
   const wishList = useReveal("up", 0.1);
@@ -159,14 +178,18 @@ export default function RsvpWishes() {
           </label>
           <input
             id="rsvp-name"
+            name="name"
             type="text"
             value={name}
-            onChange={(e) => setName(e.target.value)}
+            onChange={(event) => {
+              setName(event.target.value);
+              clearError();
+            }}
             placeholder="Name"
             maxLength={NAME_MAX}
             autoComplete="name"
             disabled={submitting}
-            className="w-full rounded-lg border border-[#2a2a2a]/20 bg-white px-[4cqw] py-[3cqw] text-[3.4cqw] text-[#2a2a2a] shadow-sm outline-none transition-shadow placeholder:text-[#2a2a2a]/50 focus:ring-2 focus:ring-[#7a5c48]/40 disabled:opacity-60 md:px-4 md:py-2.5 md:text-sm"
+            className={FIELD_CLASS}
           />
 
           <label className="sr-only" htmlFor="rsvp-message">
@@ -174,13 +197,17 @@ export default function RsvpWishes() {
           </label>
           <textarea
             id="rsvp-message"
+            name="message"
             value={message}
-            onChange={(e) => setMessage(e.target.value)}
+            onChange={(event) => {
+              setMessage(event.target.value);
+              clearError();
+            }}
             placeholder="Leave a Message"
             rows={3}
             maxLength={MESSAGE_MAX}
             disabled={submitting}
-            className="w-full resize-none rounded-lg border border-[#2a2a2a]/20 bg-white px-[4cqw] py-[3cqw] text-[3.4cqw] text-[#2a2a2a] shadow-sm outline-none transition-shadow placeholder:text-[#2a2a2a]/50 focus:ring-2 focus:ring-[#7a5c48]/40 disabled:opacity-60 md:px-4 md:py-2.5 md:text-sm"
+            className={`resize-none ${FIELD_CLASS}`}
           />
 
           <label className="sr-only" htmlFor="rsvp-attendance">
@@ -189,13 +216,15 @@ export default function RsvpWishes() {
           <div className="relative">
             <select
               id="rsvp-attendance"
+              name="attendance"
               value={attendance}
-              onChange={(e) => {
-                const value = e.target.value;
+              onChange={(event) => {
+                const value = event.target.value;
                 setAttendance(value === "yes" || value === "no" ? value : "");
+                clearError();
               }}
               disabled={submitting}
-              className="w-full appearance-none rounded-lg border border-[#2a2a2a]/20 bg-white px-[4cqw] py-[3cqw] text-[3.4cqw] text-[#2a2a2a] shadow-sm outline-none transition-shadow focus:ring-2 focus:ring-[#7a5c48]/40 disabled:opacity-60 md:px-4 md:py-2.5 md:text-sm"
+              className={`appearance-none ${FIELD_CLASS}`}
             >
               <option value="" disabled>
                 Confirm Attendance
@@ -220,7 +249,7 @@ export default function RsvpWishes() {
 
           <button
             type="submit"
-            disabled={!canSubmit}
+            disabled={!isValid || submitting}
             className="mt-[1%] w-full rounded-full bg-[#7a5c48] py-[3.2cqw] text-[3.4cqw] font-bold uppercase tracking-wide text-white shadow-md transition-opacity hover:opacity-90 active:opacity-80 disabled:cursor-not-allowed disabled:opacity-50 md:py-3 md:text-sm"
           >
             {submitting ? "Sending..." : "Submit"}
@@ -255,9 +284,14 @@ export default function RsvpWishes() {
                     <p className="mt-[0.5%] wrap-break-word text-[3.2cqw] text-[#2a2a2a]/85 md:text-sm">
                       {wish.message}
                     </p>
-                    <p className="mt-[1%] text-[2.6cqw] italic text-[#2a2a2a]/45 md:text-xs">
-                      {formatRelativeTime(wish.createdAt)}
-                    </p>
+                    <time
+                      dateTime={new Date(wish.createdAt).toISOString()}
+                      className="mt-[1%] block min-h-[1.2em] text-[2.6cqw] italic text-[#2a2a2a]/45 md:text-xs"
+                    >
+                      {now === null
+                        ? null
+                        : formatRelativeTime(wish.createdAt, now)}
+                    </time>
                   </div>
                 </li>
               ))}

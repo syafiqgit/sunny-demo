@@ -5,59 +5,81 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import { useReveal } from "./useReveal";
 
-const WEDDING_DATE = new Date("2027-01-01T00:00:00+07:00"); // GANTI ke tanggal asli
+const TARGET_MS = new Date("2027-01-01T00:00:00+07:00").getTime(); // GANTI ke tanggal asli
 
-type TimeLeft = {
+const SECOND = 1000;
+const MINUTE = 60 * SECOND;
+const HOUR = 60 * MINUTE;
+const DAY = 24 * HOUR;
+
+interface TimeLeft {
   days: number;
   hours: number;
   minutes: number;
   seconds: number;
-};
-
-function getTimeLeft(target: Date): TimeLeft {
-  const diff = Math.max(target.getTime() - Date.now(), 0);
-  return {
-    days: Math.floor(diff / 86400000),
-    hours: Math.floor((diff % 86400000) / 3600000),
-    minutes: Math.floor((diff % 3600000) / 60000),
-    seconds: Math.floor((diff % 60000) / 1000),
-  };
 }
 
 const ZERO_TIME: TimeLeft = { days: 0, hours: 0, minutes: 0, seconds: 0 };
 
+function getTimeLeft(): TimeLeft {
+  const diff = Math.max(TARGET_MS - Date.now(), 0);
+  return {
+    days: Math.floor(diff / DAY),
+    hours: Math.floor((diff % DAY) / HOUR),
+    minutes: Math.floor((diff % HOUR) / MINUTE),
+    seconds: Math.floor((diff % MINUTE) / SECOND),
+  };
+}
+
+const UNIT_LABELS = ["Days", "Hours", "Minutes", "Seconds"] as const;
+
 export default function Countdown() {
-  // Hindari hydration mismatch: render 00:00:00:00 di server,
-  // hitung nilai asli setelah mount di client.
-  const [time, setTime] = useState<TimeLeft>(ZERO_TIME);
-  const [mounted, setMounted] = useState(false);
+  // Hindari hydration mismatch: server merender 00:00:00:00 dan nilai asli
+  // baru dihitung setelah mount di client.
+  const [time, setTime] = useState<TimeLeft | null>(null);
 
   useEffect(() => {
-    setMounted(true);
-    setTime(getTimeLeft(WEDDING_DATE));
+    let timeoutId = 0;
 
-    let timeoutId: number;
     const tick = () => {
-      setTime(getTimeLeft(WEDDING_DATE));
-      timeoutId = window.setTimeout(tick, 1000);
+      setTime(getTimeLeft());
+      // Re-aligned to the wall clock on every tick rather than a flat 1000ms:
+      // a fixed interval drifts, and drifts badly once a background tab has
+      // been throttled, so the display would visibly skip a second.
+      timeoutId = window.setTimeout(tick, SECOND - (Date.now() % SECOND));
     };
-    timeoutId = window.setTimeout(tick, 1000);
 
-    return () => window.clearTimeout(timeoutId);
+    const stop = () => window.clearTimeout(timeoutId);
+
+    // Nothing to show while the tab is hidden, and a per-second setState there
+    // is pure waste - the value is refreshed the moment it comes back.
+    const handleVisibilityChange = () => {
+      stop();
+      if (!document.hidden) tick();
+    };
+
+    tick();
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      stop();
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
   }, []);
 
+  const display = time ?? ZERO_TIME;
   const isOver =
-    mounted &&
+    time !== null &&
     time.days === 0 &&
     time.hours === 0 &&
     time.minutes === 0 &&
     time.seconds === 0;
 
-  const units: { label: string; value: number }[] = [
-    { label: "Days", value: time.days },
-    { label: "Hours", value: time.hours },
-    { label: "Minutes", value: time.minutes },
-    { label: "Seconds", value: time.seconds },
+  const units = [
+    display.days,
+    display.hours,
+    display.minutes,
+    display.seconds,
   ];
 
   // The first thing the reader sees once MainSection arrives, so these lead
@@ -84,31 +106,31 @@ export default function Countdown() {
           alt=""
           width={600}
           height={900}
-          priority={false}
+          sizes="(max-width: 500px) 85vw, 425px"
           className="w-full h-auto"
         />
       </motion.div>
 
       <div className="relative z-20 flex flex-col items-center h-full px-[6cqw]">
-        {/* Countdown */}
+        {/* Countdown. `role="timer"` is silent by default, which is what we
+            want: announcing a fresh value every second talks over everything
+            else on the page. */}
         <motion.div
           className="flex items-start gap-[4cqw] mt-[10%]"
           role="timer"
           {...clock}
-          aria-live="polite"
-          aria-atomic="true"
         >
-          {units.map((unit, index) => (
-            <div key={unit.label} className="flex items-start">
+          {UNIT_LABELS.map((label, index) => (
+            <div key={label} className="flex items-start">
               <div className="flex flex-col items-center min-w-[13cqw] md:min-w-14">
                 <span className="text-[9cqw] md:text-4xl font-light text-[#2a2a2a] tabular-nums leading-none">
-                  {String(unit.value).padStart(2, "0")}
+                  {String(units[index]).padStart(2, "0")}
                 </span>
                 <span className="mt-[1.5cqw] text-[2.6cqw] md:text-sm tracking-wide uppercase text-[#2a2a2a]/60">
-                  {unit.label}
+                  {label}
                 </span>
               </div>
-              {index < units.length - 1 && (
+              {index < UNIT_LABELS.length - 1 && (
                 <span
                   aria-hidden="true"
                   className="text-[7cqw] md:text-3xl font-light text-[#2a2a2a]/30 mx-[1cqw] leading-none"

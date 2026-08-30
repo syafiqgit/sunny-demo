@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { motion } from "framer-motion";
+import { safeHref } from "../lib/url";
 import { useReveal } from "./useReveal";
 
 const GIFT_URL = "#"; // GANTI ke link rekening/e-wallet/wishlist kado
@@ -43,7 +44,7 @@ export default function Closing() {
             means the world to us.
           </p>
           <a
-            href={GIFT_URL}
+            href={safeHref(GIFT_URL)}
             className="rounded-[999px] bg-[#785b4d] px-[8%] py-[4%]
             text-[2.8cqw] font-bold uppercase tracking-widest text-white
             transition-colors hover:bg-[#63493d] focus-visible:outline
@@ -94,7 +95,7 @@ export default function Closing() {
 
         <span
           aria-hidden="true"
-          className="mt-[8%] animate-bounce text-[2.6cqw] font-medium text-[#2a2a2a]/50 md:text-[11px]"
+          className="mt-[8%] animate-bounce motion-reduce:animate-none text-[2.6cqw] font-medium text-[#2a2a2a]/50 md:text-[11px]"
         >
           Swipe up
         </span>

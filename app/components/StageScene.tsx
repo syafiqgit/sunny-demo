@@ -6,8 +6,7 @@ import StageCamera from "./StageCamera";
 import StageCharacterLayer from "./StageCharacterLayer";
 import StageForegroundLayer from "./StageForegroundLayer";
 
-type StageSceneProps = Pick<SceneMotion, "scale" | "translateX" | "translateY"> &
-  PlaneMotion;
+type StageSceneProps = Pick<SceneMotion, "scale" | "translateX"> & PlaneMotion;
 
 /**
  * The camera moves the whole scene; each layer then carries its own plane
@@ -19,7 +18,6 @@ type StageSceneProps = Pick<SceneMotion, "scale" | "translateX" | "translateY"> 
 export default function StageScene({
   scale,
   translateX,
-  translateY,
   canopy,
   field,
   couple,
@@ -27,7 +25,7 @@ export default function StageScene({
   frontGrass,
 }: StageSceneProps) {
   return (
-    <StageCamera scale={scale} translateX={translateX} translateY={translateY}>
+    <StageCamera scale={scale} translateX={translateX}>
       <StageBackgroundLayer canopy={canopy} />
       <StageForegroundLayer
         field={field}
