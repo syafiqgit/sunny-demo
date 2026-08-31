@@ -85,7 +85,7 @@ export default function Home() {
               <Mail className="size-4" aria-hidden="true" />
             </span>
             <span className="text-[15px] font-semibold tracking-tight">
-              UndanganCuyy
+              Diundang.id
             </span>
           </Link>
 
