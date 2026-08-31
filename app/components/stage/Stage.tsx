@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect } from "react";
 import { Great_Vibes } from "next/font/google";
 import {
   motion,
@@ -121,7 +120,7 @@ function usePlane(dolly: MotionValue<number>, name: PlaneName): PlaneTransform {
 }
 
 export default function Stage({
-  revealProgress = 0,
+  revealProgress,
   groom,
   bride,
   matrimony,
@@ -134,16 +133,30 @@ export default function Stage({
   coupleNames,
 }: StageProps) {
   const shouldReduceMotion = useReducedMotion();
-  const rawProgress = useMotionValue(revealProgress);
+  // The scroller owns the reveal value and writes it straight into this
+  // MotionValue, frame by frame, so the camera can track a gesture without a
+  // single React render. The fallback only exists so Stage still stands up on
+  // its own - hooks cannot be conditional.
+  const fallbackProgress = useMotionValue(0);
+  const rawProgress = revealProgress ?? fallbackProgress;
 
-  useEffect(() => {
-    rawProgress.set(revealProgress);
-  }, [revealProgress, rawProgress]);
-
+  // The camera's own weight, and the whole reason a beat reads as a shot
+  // rather than a jump: heavily overdamped (a damping ratio of ~2.4), so the
+  // slow mode has a time constant of ~1.2s and a leg takes the better part of
+  // two seconds to come to rest. That slowness is the effect, not a cost of
+  // it, and these three numbers are tuned - leave them alone.
+  //
+  // What did change is what the slowness costs. This used to be the only
+  // thing carrying the camera: a wheel tick fired it at the next beat and
+  // then nothing could steer it, so the scroller had to go deaf for 1.5s or a
+  // second tick would land while the pan was a third travelled and skip a
+  // beat outright. Now the scroll position is the target and this only trails
+  // it, so a tick arriving mid-flight just moves the target and the camera
+  // curves towards the new one. Same weight, no deaf period.
   const springProgress = useSpring(rawProgress, {
-    stiffness: 25, // Dinaikkan sedikit dari 15 agar lebih responsif saat di-scroll
-    damping: 32, // Pengereman tetap halus dan mencegah efek mantul
-    mass: 1.8, // Dikurangi dari 3 agar kamera sampai di tujuan lebih cepat
+    stiffness: 25,
+    damping: 32,
+    mass: 1.8,
     restDelta: 0.0005,
   });
   // Readers who ask for reduced motion get exactly the same framings, cut to

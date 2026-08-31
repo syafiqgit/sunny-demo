@@ -9,7 +9,12 @@ import type { StageContent } from "@/app/lib/content";
  */
 
 export interface StageProps extends StageContent {
-  revealProgress?: number;
+  /**
+   * The 0..1.2 story position, written by the scroller. A MotionValue rather
+   * than a number so the whole camera can be driven from a scroll handler
+   * without re-rendering the tree once per frame.
+   */
+  revealProgress?: MotionValue<number>;
   /** Nama pasangan - hanya dipakai untuk alt text potongan gambar. */
   coupleNames: string;
 }
